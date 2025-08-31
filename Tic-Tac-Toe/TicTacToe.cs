@@ -7,8 +7,8 @@ public partial class TicTacToe
 {
     public const int NEXT_TURN = 18; // Кто ходит следуший
     public const int WINNER = 19; // Кто победил
-    public const int TURN_COUNTER = 21; // Сколько ходов сделано
-    public const int X_LEVEL = 25; // Уровень X
+    public const int ROUND_COUNTER = 21; // Сколько раундов сделано
+    public const int X_LEVEL = 24; // Уровень X
     public const int O_LEVEL = 28; // Уровень O
     public const int X = 1;
     public const int O = 2;
@@ -35,8 +35,8 @@ public partial class TicTacToe
     // Биты нумеруются от 31 (старший) до 0 (младший)
     //
     // Формат: 
-    //   31                                         0
-    //   G  FFF  EEE  DDDD  CC  B  AAAAAAAAAAAAAAAAAA
+    //   31                                       0
+    //   FFFF  EEEE  DDD  CC  B  AAAAAAAAAAAAAAAAAA
     //
     // Где:
     //   A (биты 0–17)  : Поле (9 клеток × 2 бита) — младшие биты
@@ -47,10 +47,9 @@ public partial class TicTacToe
     //                    678
     //   B (бит 18)     : Следующий ходит O? (1 — да, 0 — X)
     //   C (биты 19–20) : Результат
-    //   D (биты 21–24) : Счётчик ходов (0–15)
-    //   E (биты 25-27) : Уровень X
-    //   F (биты 28-30) : Уровень O
-    //   G (бит 31)     : Зарезервирован
+    //   D (биты 21–23) : Счётчик раундов(пара X и O, на последнем раунде только X) (0–5)
+    //   E (биты 24-27) : Уровень X
+    //   F (биты 28-31) : Уровень O
     //
     //   0b00 = пусто, 0b01 = X, 0b10 = O, 0b11 = XO
     // Уровни:
@@ -84,11 +83,11 @@ public partial class TicTacToe
     public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
     public uint ReadBoard() => state & 0x3FFFF;
     // Получить уровень текущего игрока
-    public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b111;
+    public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b1111;
     public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(IsXTurn() ? X : O);
 
-    public uint ReadCurrentTurn() => (state >> TURN_COUNTER) & 0b1111;
-    public uint ReadCurrentRound() => ReadCurrentTurn() / 2;
+    public uint ReadCurrentRound() => (state >> ROUND_COUNTER) & 0b111;
+    public uint ReadCurrentTurn() => (ReadCurrentRound() * 2) + (IsXTurn() ? 0u : 1u);
 
     // Проверить ход на соответствие правилам
     public bool IsLegalMove(int cell) => (cell <= 8) && (cell >= 0) && (ReadCellType(cell) == 0);
@@ -109,8 +108,8 @@ public partial class TicTacToe
     {
         ValidateMove(cell, IsXTurn() ? X : O);
         state |= 1u << (int)((state >> NEXT_TURN) & 1) << (cell << 1); // Устоновить X или O
+        state += ((state >> NEXT_TURN) & 1) << ROUND_COUNTER; // Увеличеть счетчик, если ходил нолик
         state ^= 1 << NEXT_TURN; // Сменить очередь
-        state += 1 << TURN_COUNTER; // Увеличеть счетчик
         return SetWinner();
     }
     public uint TestTurnStart(int cell, int player)
@@ -203,7 +202,8 @@ public partial class TicTacToe
             if ((state & mask & 0x15555) == (mask & 0x15555)) winner |= 1; // Среди крестиков
             if ((state & mask & 0x2AAAA) == (mask & 0x2AAAA)) winner |= 2; // и ноликов
         }
-        if (winner == 0 && ((state >> TURN_COUNTER) & 0b1111) == 9) winner = XO; // Ничья?
+        if (winner == 0 && ReadCurrentTurn() == 9) winner = XO; // Ничья
+
         state |= winner << WINNER;
         return winner;
     }

@@ -38,10 +38,10 @@ public class CheaterBot : IBot
     }
     protected static void ReCountTurns(TicTacToe game)
     {
-        game.state &= ~(uint)(0b1111 << TURN_COUNTER);
+        game.state &= ~(uint)(0b1111 << ROUND_COUNTER);
         for (int i = 0; i < 9; i++)
         {
-            if (game.ReadCellType(i) != EMPTY) game.state += 1u << TURN_COUNTER;
+            if (game.ReadCellType(i) != EMPTY) game.state += 1u << ROUND_COUNTER;
         }
     }
     protected static int NoTurn(TicTacToe game, int I) // Эта функция НЕ делает ход. Т. е. ничего не происходит
