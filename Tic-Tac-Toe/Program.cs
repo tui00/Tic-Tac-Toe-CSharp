@@ -73,12 +73,13 @@ class Program
             if (game.ReadCurrentPlayerLevel() != HUMAN)
             {
                 game.MakeTurn();
+                Thread.Sleep(500);
             }
             else
             {
                 while (true)
                 {
-                    char input = Console.ReadKey().KeyChar;
+                    char input = Console.ReadKey(true).KeyChar;
 
                     if (input == 'Q') return;
 
@@ -89,7 +90,6 @@ class Program
                     }
                 }
             }
-            Thread.Sleep(500);
         }
 
         Console.WriteLine(GetStatistics(xWins, oWins, draws, time, game));
