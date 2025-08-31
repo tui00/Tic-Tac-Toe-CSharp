@@ -24,7 +24,7 @@ class Program
         var bots = TicTacToe.bots;
 
         Console.WriteLine("Уровни:");
-        for (int i = 1; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
+        for (int i = 0; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
 
         uint XLevel;
         Console.WriteLine("Введите уровень для X:");
@@ -89,9 +89,12 @@ class Program
                         break;
                     }
 
-                    if (game.IsLegalMove(input - '1'))
+                    input -= '1';
+                    int cell = input + ((input < 3) ? 6 : ((input > 5) ? -6 : 0));  
+
+                    if (game.IsLegalMove(cell))
                     {
-                        game.MakeTurn(input - '1');
+                        game.MakeTurn(cell);
                         break;
                     }
                 }
