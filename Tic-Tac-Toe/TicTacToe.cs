@@ -28,7 +28,6 @@ public partial class TicTacToe
         ("Стандартный бот", typeof(BestBot)),
         ("X-Схема", typeof(XAndOSchemeBot)),
         ("MiniMax бот", typeof(MiniMaxBot)),
-        // ("Читер", typeof(CheaterBot))
     ];
 
     // Состояние игры "Крестики-нолики" — uint (32 бита)
