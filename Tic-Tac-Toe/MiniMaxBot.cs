@@ -4,7 +4,7 @@ namespace TicTacToe;
 
 public class MiniMaxBot : IBot
 {
-    protected static Dictionary<uint, (int cell, int score)> transpositionTable = [];
+    private static Dictionary<uint, (int cell, int score)> transpositionTable = [];
     private static readonly Lock tableLock = new();
 
     public int GetTurn(TicTacToe game, Random random)

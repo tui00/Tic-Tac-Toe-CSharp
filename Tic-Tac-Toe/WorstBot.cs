@@ -4,7 +4,7 @@ namespace TicTacToe;
 
 public class WorstBot : MiniMaxBot, IBot
 {
-    protected static Dictionary<uint, (int cell, int score)> worstTranspositionTable = [];
+    private static Dictionary<uint, (int cell, int score)> worstTranspositionTable = [];
     public new int GetTurn(TicTacToe game, Random random)
     {
         int I = game.IsXTurn() ? X : O;
