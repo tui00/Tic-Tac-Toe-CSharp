@@ -28,7 +28,7 @@ public partial class TicTacToe
         ("Стандартный бот", typeof(BestBot)),
         ("X-Схема", typeof(XAndOSchemeBot)),
         ("MiniMax бот", typeof(MiniMaxBot)),
-        ("Читер", typeof(CheaterBot))
+        // ("Читер", typeof(CheaterBot))
     ];
 
     // Состояние игры "Крестики-нолики" — uint (32 бита)
@@ -84,7 +84,7 @@ public partial class TicTacToe
     public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
     public uint ReadBoard() => state & 0x3FFFF;
     // Получить уровень текущего игрока
-    public uint ReadPlayerLevel(int player) => (state >> X_LEVEL >> (player == X ? 0 : 3)) & 0b111;
+    public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b111;
     public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(IsXTurn() ? X : O);
 
     public uint ReadCurrentTurn() => (state >> TURN_COUNTER) & 0b1111;
@@ -113,14 +113,22 @@ public partial class TicTacToe
         state += 1 << TURN_COUNTER; // Увеличеть счетчик
         return SetWinner();
     }
-    public uint TestTurn(int cell, int player)
+    public uint TestTurnStart(int cell, int player)
     {
+        oldStates.Push(state);
         state &= ~(uint)(1 << NEXT_TURN);
-        state |= (uint)((player - X) << NEXT_TURN);
+        state |= (uint)(((player == X) ? 0 : 1) << NEXT_TURN);
         uint result = ApplyTurn(cell);
         return result;
     }
-    public void Undo() => state = oldStates.TryPop(out uint oldState) ? state : oldState;
+    public void TestTurnStop() => Undo();
+    public uint TestTurn(int cell, int player)
+    {
+        uint result = TestTurnStart(cell, player);
+        TestTurnStop();
+        return result;
+    }
+    public void Undo() => state = oldStates.TryPop(out uint oldState) ? oldState : state;
 
     public int GetBestTurn()
     {

@@ -33,9 +33,9 @@ public class MiniMaxBot : IBot
         {
             if (!game.IsLegalMove(i)) continue;
 
-            game.TestTurn(i, I);
+            game.TestTurnStart(i, I);
             (int _, int score) = Search(game, Enemy, I, ref transpositionTable, depth + 1, alpha, beta);
-            game.Undo();
+            game.TestTurnStop();
 
             if (I == X)
             {
