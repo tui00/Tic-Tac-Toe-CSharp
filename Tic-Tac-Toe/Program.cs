@@ -81,6 +81,12 @@ class Program
                     char input = Console.ReadKey().KeyChar;
 
                     if (input == 'Q') return;
+                    if (input == 'U')
+                    {
+                        if (game.ReadPlayerLevel(game.IsXTurn() ? O : X) != HUMAN) game.Undo();
+                        game.Undo();
+                        break;
+                    }
 
                     if (game.IsLegalMove(input - '1'))
                     {
