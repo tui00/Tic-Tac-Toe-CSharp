@@ -79,7 +79,6 @@ public partial class TicTacToe
     public uint ReadWinner() => (state >> WINNER) & 0b11;
     // Кто ходит следущий
     public int ReadWhoseTurn() => X << ((int)state >> NEXT_TURN & 1);
-    public bool IsXTurn() => ((state >> NEXT_TURN) & 1) == 0;
     // Узнать тип клетки
     public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
     public uint ReadBoard() => state & 0x3FFFF;
