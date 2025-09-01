@@ -25,7 +25,6 @@ public partial class TicTacToe
         ("Худший бот", typeof(WorstBot)),
         ("Случайный бот", typeof(RandomBot)),
         ("Драматург", typeof(DramatistBot)),
-        ("Ничья-бот", typeof(DrawBot)),
         ("Стандартный бот", typeof(BestBot)),
         ("X-Схема", typeof(XAndOSchemeBot)),
         ("MiniMax бот", typeof(MiniMaxBot)),
