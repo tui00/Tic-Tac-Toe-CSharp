@@ -7,8 +7,8 @@ public class DrawBot : MiniMaxBot, IBot
     protected static Dictionary<uint, (int cell, int score)> drawsTranspositionTable = [];
     public new int GetTurn(TicTacToe game, Random random)
     {
-        int I = game.IsXTurn() ? X : O;
-        int Enemy = game.IsXTurn() ? O : X;
+        int I = game.ReadWhoseTurn();
+        int Enemy = game.ReadWhoseTurn() ^ XO;
         (int result, int score) = Search(game, I, Enemy, ref drawsTranspositionTable);
         return result == -1 ? game.GetBestTurn() : result;
     }

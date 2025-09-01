@@ -10,8 +10,8 @@ public class MiniMaxBot : IBot
     public int GetTurn(TicTacToe game, Random random)
     {
         if (game.TryWinAndBlock(out int cell)) return cell;
-        int I = game.IsXTurn() ? X : O;
-        int Enemy = game.IsXTurn() ? O : X;
+        int I = game.ReadWhoseTurn();
+        int Enemy = game.ReadWhoseTurn() ^ XO;
         (int result, int score) = Search(game, I, Enemy, ref transpositionTable);
         return result == -1 ? game.GetBestTurn() : result;
     }

@@ -48,7 +48,7 @@ class Program
         {
             Console.Clear();
 
-            Console.WriteLine($"Ходит {(game.IsXTurn() ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
+            Console.WriteLine($"Ходит {(game.ReadWhoseTurn() == X ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
             for (int i = 0; i < 9; i++)
             {
                 uint cell = game.ReadCellType(i); // Тип клетки: 0b00(Пусто), 0b01(X), 0b10(O), 0b11(Оба игрока в одной клетке(Ничья))
@@ -84,7 +84,7 @@ class Program
                     if (input == 'Q') return;
                     if (input == 'U')
                     {
-                        if (game.ReadPlayerLevel(game.IsXTurn() ? O : X) != HUMAN) game.Undo();
+                        if (game.ReadPlayerLevel(game.ReadWhoseTurn() ^ XO) != HUMAN) game.Undo();
                         game.Undo();
                         break;
                     }
