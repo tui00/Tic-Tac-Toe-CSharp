@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace TicTacToe;
 // lk означает Для Алисы. БЕЗ КОДА
 
