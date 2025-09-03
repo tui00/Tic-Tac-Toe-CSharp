@@ -12,7 +12,7 @@ public class XAndOSchemeBot : IBot
     public int GetTurn(TicTacToe game, Random random)
     {
         if (game.TryWinAndBlock(out int priorityCell)) return priorityCell;
-        return game.IsXTurn() ? XScheme(game, random) : OScheme(game, random);
+        return game.ReadWhoseTurn() == X ? XScheme(game, random) : OScheme(game, random);
     }
 
     protected int XScheme(TicTacToe game, Random random)

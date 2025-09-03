@@ -74,17 +74,17 @@ public partial class TicTacToe
 
     // Получить победителя
     public uint ReadWinner() => (state >> WINNER) & 0b11;
-    // Следущий ходит X
-    public bool IsXTurn() => ((state >> NEXT_TURN) & 1) == 0;
+    // Кто ходит следущий
+    public int ReadWhoseTurn() => X << ((int)state >> NEXT_TURN & 1);
     // Узнать тип клетки
     public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
     public uint ReadBoard() => state & 0x3FFFF;
     // Получить уровень текущего игрока
     public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b1111;
-    public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(IsXTurn() ? X : O);
+    public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(ReadWhoseTurn());
 
     public uint ReadCurrentRound() => (state >> ROUND_COUNTER) & 0b111;
-    public uint ReadCurrentTurn() => (ReadCurrentRound() * 2) + (IsXTurn() ? 0u : 1u);
+    public uint ReadCurrentTurn() => (ReadCurrentRound() * 2) + ((uint)ReadWhoseTurn() - 1);
 
     // Проверить ход на соответствие правилам
     public bool IsLegalMove(int cell) => (cell <= 8) && (cell >= 0) && (ReadCellType(cell) == 0);
@@ -95,7 +95,7 @@ public partial class TicTacToe
         uint level = ReadCurrentPlayerLevel();
         if (level != HUMAN)
         {
-            cell = (IsXTurn() ? XBot : OBot)!.GetTurn(this, random);
+            cell = (ReadWhoseTurn() == X ? XBot : OBot)!.GetTurn(this, random);
         }
 
         oldStates.Push(state);
@@ -103,7 +103,7 @@ public partial class TicTacToe
     }
     protected uint ApplyTurn(int cell)
     {
-        ValidateMove(cell, IsXTurn() ? X : O);
+        ValidateMove(cell, ReadWhoseTurn());
         state |= 1u << (int)((state >> NEXT_TURN) & 1) << (cell << 1); // Устоновить X или O
         state += ((state >> NEXT_TURN) & 1) << ROUND_COUNTER; // Увеличеть счетчик, если ходил нолик
         state ^= 1 << NEXT_TURN; // Сменить очередь
@@ -163,8 +163,8 @@ public partial class TicTacToe
 
     public bool TryWinAndBlock(out int cell)
     {
-        int I = IsXTurn() ? X : O;
-        int Enemy = IsXTurn() ? O : X;
+        int I = ReadWhoseTurn();
+        int Enemy = ReadWhoseTurn() ^ XO;
         if (TryFindWinningMove(I, out int atackCell)) { cell = atackCell; return true; }
         if (TryFindWinningMove(Enemy, out int blockCell)) { cell = blockCell; return true; }
         cell = -1;

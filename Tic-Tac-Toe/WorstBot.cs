@@ -7,8 +7,8 @@ public class WorstBot : MiniMaxBot, IBot
     private static Dictionary<uint, (int cell, int score)> worstTranspositionTable = [];
     public new int GetTurn(TicTacToe game, Random random)
     {
-        int I = game.IsXTurn() ? X : O;
-        int Enemy = game.IsXTurn() ? O : X;
+        int I = game.ReadWhoseTurn();
+        int Enemy = game.ReadWhoseTurn() ^ XO;
         (int result, int score) = Search(game, I, Enemy, ref worstTranspositionTable);
         return result == -1 ? game.GetWorstTurn() : result;
     }

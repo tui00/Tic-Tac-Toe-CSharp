@@ -37,8 +37,8 @@ public class DramatistBot : IBot
     private int PlayAct(TicTacToe game, Random random)
     {
         uint turn = game.ReadCurrentTurn();
-        int player = game.IsXTurn() ? X : O;
-        int opponent = player == X ? O : X;
+        int player = game.ReadWhoseTurn();
+        int opponent = game.ReadWhoseTurn() ^ XO;
 
         return GetAct(turn) switch
         {
