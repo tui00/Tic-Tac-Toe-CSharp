@@ -21,7 +21,7 @@ public class DramatistBot : IBot
 
     private int HandlePriorityMove(TicTacToe game, int cell, Random random)
     {
-        uint turn = game.ReadCurrentTurn();
+        ulong turn = game.ReadCurrentTurn();
 
         // В экспозиции — иногда пропускаем выгодный ход ради драмы (30%)
         if (GetAct(turn) == EXPOSITION && random.Next(100) < 30)
@@ -36,7 +36,7 @@ public class DramatistBot : IBot
 
     private int PlayAct(TicTacToe game, Random random)
     {
-        uint turn = game.ReadCurrentTurn();
+        ulong turn = game.ReadCurrentTurn();
         int player = game.ReadWhoseTurn();
         int opponent = game.ReadWhoseTurn() ^ XO;
 
@@ -49,7 +49,7 @@ public class DramatistBot : IBot
         };
     }
 
-    private static int GetAct(uint turn) => turn switch
+    private static int GetAct(ulong turn) => turn switch
     {
         <= 2 => EXPOSITION,
         <= 4 => CONFLICT,

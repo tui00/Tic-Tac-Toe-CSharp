@@ -26,24 +26,24 @@ class Program
         Console.WriteLine("Уровни:");
         for (int i = 0; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
 
-        uint XLevel;
+        int XLevel;
         Console.WriteLine("Введите уровень для X:");
-        while ((!uint.TryParse(Console.ReadLine(), out XLevel)) || (XLevel >= bots.Length)) ;
-        uint OLevel;
+        while ((!int.TryParse(Console.ReadLine(), out XLevel)) || (XLevel >= bots.Length)) ;
+        int OLevel;
         Console.WriteLine("Введите уровень для O:");
-        while ((!uint.TryParse(Console.ReadLine(), out OLevel)) || (OLevel >= bots.Length)) ;
+        while ((!int.TryParse(Console.ReadLine(), out OLevel)) || (OLevel >= bots.Length)) ;
 
         DateTime time = DateTime.Now;
 
-        uint xWins = 0, oWins = 0, draws = 0;
+        ulong xWins = 0, oWins = 0, draws = 0;
 
-        uint games;
+        ulong games;
         Console.WriteLine("Введите кол-во игр (меньше 100):");
-        while ((!uint.TryParse(Console.ReadLine(), out games)) || (games > 100)) ;
+        while ((!ulong.TryParse(Console.ReadLine(), out games)) || (games > 100)) ;
 
         TicTacToe game = new(XLevel, OLevel);
 
-        uint initalState = game.state;
+        ulong initalState = game.state;
         while (games > 0)
         {
             Console.Clear();
@@ -51,7 +51,7 @@ class Program
             Console.WriteLine($"Ходит {(game.ReadWhoseTurn() == X ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
             for (int i = 0; i < 9; i++)
             {
-                uint cell = game.ReadCellType(i); // Тип клетки: 0b00(Пусто), 0b01(X), 0b10(O), 0b11(Оба игрока в одной клетке(Ничья))
+                int cell = game.ReadCellType(i); // Тип клетки: 0b00(Пусто), 0b01(X), 0b10(O), 0b11(Оба игрока в одной клетке(Ничья))
                 Console.Write($"{(cell == EMPTY ? "_" : (cell == X ? "X" : (cell == O ? "O" : "-")))}");
                 if ((i + 1) % 3 == 0) Console.WriteLine();
                 else Console.Write(" | ");
@@ -131,20 +131,20 @@ class Program
 
         var tasks = new List<Task<string>>();
 
-        uint enemy = 1;
+        int enemy = 1;
         bool swap = false;
         while (enemy < bots.Length)
         {
-            uint enemyCopy = enemy;
+            int enemyCopy = enemy;
             bool swapCopy = swap;
             tasks.Add(Task.Run(() =>
             {
-                uint xWins = 0, oWins = 0, draws = 0;
+                ulong xWins = 0, oWins = 0, draws = 0;
                 int games = 1000;
 
-                TicTacToe game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
+                TicTacToe game = new(swapCopy ? enemyCopy : I, swapCopy ? I : enemyCopy);
 
-                uint initalState = game.state;
+                ulong initalState = game.state;
 
                 while (games > 0)
                 {
@@ -173,7 +173,7 @@ class Program
         foreach (var result in results) Console.WriteLine(result);
     }
 
-    static string GetStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, TicTacToe game)
+    static string GetStatistics(ulong xWins, ulong oWins, ulong draws, DateTime startTime, TicTacToe game)
     {
         TimeSpan duration = DateTime.Now - startTime;
         string X = bots[game.ReadPlayerLevel(TicTacToe.X)].Item1;

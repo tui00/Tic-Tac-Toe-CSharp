@@ -3,11 +3,11 @@ namespace TicTacToe;
 
 public partial class TicTacToe
 {
-    public const int NEXT_TURN = 18; // Кто ходит следуший
-    public const int WINNER = 19; // Кто победил
-    public const int ROUND_COUNTER = 21; // Сколько раундов сделано
-    public const int X_LEVEL = 24; // Уровень X
-    public const int O_LEVEL = 28; // Уровень O
+    public const int NEXT_TURN = 48; // Кто ходит следуший
+    public const int WINNER = 49; // Кто победил
+    public const int ROUND_COUNTER = 51; // Сколько раундов сделано
+    public const int X_LEVEL = 54; // Уровень X
+    public const int O_LEVEL = 58; // Уровень O
     public const int X = 1;
     public const int O = 2;
     public const int XO = 3;
@@ -28,25 +28,32 @@ public partial class TicTacToe
         ("MiniMax бот", typeof(MiniMaxBot)),
     ];
 
-    // Состояние игры "Крестики-нолики" — uint (32 бита)
-    // Биты нумеруются от 31 (старший) до 0 (младший)
+// Состояние игры "Крестики-нолики" — ulong (64 бита)
+    // Биты нумеруются от 63 (старший) до 0 (младший)
     //
     // Формат: 
-    //   31                                       0
-    //   FFFF  EEEE  DDD  CC  B  AAAAAAAAAAAAAAAAAA
+    //   63                                                             0
+    //   HGGGGFFFFEEEEDDCBBBBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     //
     // Где:
-    //   A (биты 0–17)  : Поле (9 клеток × 2 бита) — младшие биты
-    //                    Клетки: 0–8 (слева направо, сверху вниз)
-    //                    Так:
-    //                    012
-    //                    345
-    //                    678
-    //   B (бит 18)     : Следующий ходит O? (1 — да, 0 — X)
-    //   C (биты 19–20) : Результат
-    //   D (биты 21–23) : Счётчик раундов(пара X и O, на последнем раунде только X) (0–5)
-    //   E (биты 24-27) : Уровень X
-    //   F (биты 28-31) : Уровень O
+    //   A (биты 0-31)  : Поле (9(16) клеток × 2 бита) — младшие биты
+    //                    Клетки: 0–8(15) (слева направо, сверху вниз)
+    //                      3x3: Так:
+    //                           012
+    //                           345
+    //                           678
+    //                      4x4: Так:
+    //                           0,1,2,3
+    //                           4,5,6,7
+    //                           8,9,10,11
+    //                           12,13,14,15
+    //   B (биты 32-47) : CRC-16
+    //   C (биты 48)    : Следующий ходит O? (1 — да, 0 — X)
+    //   D (биты 49–50) : Результат
+    //   E (биты 51-54) : Счётчик раундов(пара X и O) (0–8)
+    //   F (биты 55-58) : Уровень X
+    //   G (биты 59-62) : Уровень O
+    //   H (бит 63)     : Режим 4x4
     //
     //   0b00 = пусто, 0b01 = X, 0b10 = O, 0b11 = XO
     // Уровни:
@@ -55,36 +62,36 @@ public partial class TicTacToe
     //   2 - ИИ 2
     //   3 - ИИ 3
     //   ...
-    public uint state;
-    protected Stack<uint> oldStates = new(9);
+    public ulong state;
+    protected Stack<ulong> oldStates = new(9);
 
     protected Random random = new();
 
     protected IBot? XBot;
     protected IBot? OBot;
 
-    public TicTacToe(uint xLevel, uint oLevel)
+    public TicTacToe(int xLevel, int oLevel)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(xLevel, (uint)bots.Length, nameof(xLevel));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(oLevel, (uint)bots.Length, nameof(oLevel));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(xLevel, bots.Length, nameof(xLevel));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(oLevel, bots.Length, nameof(oLevel));
         XBot = (IBot?)((bots[xLevel].Item2 == null) ? null : Activator.CreateInstance(bots[xLevel].Item2!));
         OBot = (IBot?)((bots[oLevel].Item2 == null) ? null : Activator.CreateInstance(bots[oLevel].Item2!));
-        state = (xLevel << X_LEVEL) | (oLevel << O_LEVEL);
+        state = (((uint)xLevel) << X_LEVEL) | (((uint)oLevel) << O_LEVEL);
     }
 
     // Получить победителя
-    public uint ReadWinner() => (state >> WINNER) & 0b11;
+    public ulong ReadWinner() => (state >> WINNER) & 0b11;
     // Кто ходит следущий
     public int ReadWhoseTurn() => X << ((int)state >> NEXT_TURN & 1);
     // Узнать тип клетки
-    public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
-    public uint ReadBoard() => state & 0x3FFFF;
+    public int ReadCellType(int cell) => (int)((state >> (cell * 2)) & 0b11u);
+    public ulong ReadBoard() => state & 0x3FFFF;
     // Получить уровень текущего игрока
-    public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b1111;
-    public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(ReadWhoseTurn());
+    public ulong ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b1111;
+    public ulong ReadCurrentPlayerLevel() => ReadPlayerLevel(ReadWhoseTurn());
 
-    public uint ReadCurrentRound() => (state >> ROUND_COUNTER) & 0b111;
-    public uint ReadCurrentTurn() => (ReadCurrentRound() * 2) + ((uint)ReadWhoseTurn() - 1);
+    public ulong ReadCurrentRound() => (state >> ROUND_COUNTER) & 0b111;
+    public ulong ReadCurrentTurn() => (ReadCurrentRound() * 2) + ((ulong)ReadWhoseTurn() - 1);
 
     // Проверить ход на соответствие правилам
     public bool IsLegalMove(int cell) => (cell <= 8) && (cell >= 0) && (ReadCellType(cell) == 0);
@@ -92,7 +99,7 @@ public partial class TicTacToe
 
     public void MakeTurn(int cell = -1)
     {
-        uint level = ReadCurrentPlayerLevel();
+        ulong level = ReadCurrentPlayerLevel();
         if (level != HUMAN)
         {
             cell = (ReadWhoseTurn() == X ? XBot : OBot)!.GetTurn(this, random);
@@ -101,7 +108,7 @@ public partial class TicTacToe
         oldStates.Push(state);
         ApplyTurn(cell);
     }
-    protected uint ApplyTurn(int cell)
+    protected int ApplyTurn(int cell)
     {
         ValidateMove(cell, ReadWhoseTurn());
         state |= 1u << (int)((state >> NEXT_TURN) & 1) << (cell << 1); // Устоновить X или O
@@ -109,22 +116,22 @@ public partial class TicTacToe
         state ^= 1 << NEXT_TURN; // Сменить очередь
         return SetWinner();
     }
-    public uint TestTurnStart(int cell, int player)
+    public int TestTurnStart(int cell, int player)
     {
         oldStates.Push(state);
-        state &= ~(uint)(1 << NEXT_TURN);
-        state |= (uint)(((player == X) ? 0 : 1) << NEXT_TURN);
-        uint result = ApplyTurn(cell);
+        state &= ~(ulong)(1 << NEXT_TURN);
+        state |= ((player == X) ? 0u : 1u) << NEXT_TURN;
+        int result = ApplyTurn(cell);
         return result;
     }
     public void TestTurnStop() => Undo();
-    public uint TestTurn(int cell, int player)
+    public int TestTurn(int cell, int player)
     {
-        uint result = TestTurnStart(cell, player);
+        int result = TestTurnStart(cell, player);
         TestTurnStop();
         return result;
     }
-    public void Undo() => state = oldStates.TryPop(out uint oldState) ? oldState : state;
+    public void Undo() => state = oldStates.TryPop(out ulong oldState) ? oldState : state;
 
     public int GetBestTurn()
     {
@@ -191,10 +198,10 @@ public partial class TicTacToe
         return counter;
     }
 
-    protected uint SetWinner()
+    protected int SetWinner()
     {
-        uint winner = 0;
-        foreach (uint mask in new uint[] { 0x3F, 0xFC0, 0x3F000, 0x30C3, 0xC30C, 0x30C30, 0x30303, 0x3330, }) // Перебор победных комбинаций
+        ulong winner = 0;
+        foreach (ulong mask in new ulong[] { 0x3F, 0xFC0, 0x3F000, 0x30C3, 0xC30C, 0x30C30, 0x30303, 0x3330, }) // Перебор победных комбинаций
         {
             if ((state & mask & 0x15555) == (mask & 0x15555)) winner |= 1; // Среди крестиков
             if ((state & mask & 0x2AAAA) == (mask & 0x2AAAA)) winner |= 2; // и ноликов
@@ -202,6 +209,6 @@ public partial class TicTacToe
         if (winner == 0 && ReadCurrentTurn() == 9) winner = XO; // Ничья
 
         state |= winner << WINNER;
-        return winner;
+        return (int)winner;
     }
 }

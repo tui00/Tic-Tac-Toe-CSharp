@@ -17,7 +17,7 @@ public class XAndOSchemeBot : IBot
 
     protected int XScheme(TicTacToe game, Random random)
     {
-        uint round = game.ReadCurrentRound();
+        ulong round = game.ReadCurrentRound();
 
         if (round == 0) return 0;
         if (round == 1)

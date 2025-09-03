@@ -4,7 +4,7 @@ namespace TicTacToe;
 
 public class WorstBot : MiniMaxBot, IBot
 {
-    private static Dictionary<uint, (int cell, int score)> worstTranspositionTable = [];
+    private static Dictionary<ulong, (int cell, int score)> worstTranspositionTable = [];
     public new int GetTurn(TicTacToe game, Random random)
     {
         int I = game.ReadWhoseTurn();
@@ -15,7 +15,7 @@ public class WorstBot : MiniMaxBot, IBot
 
     protected override bool TryEvaluate(TicTacToe game, int I, int depth, out int result)
     {
-        uint winner = game.ReadWinner();
+        ulong winner = game.ReadWinner();
         result = 10 - depth;
         result = -result;
         if (winner == X) return true;
