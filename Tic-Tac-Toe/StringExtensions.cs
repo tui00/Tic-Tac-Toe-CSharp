@@ -23,4 +23,6 @@ internal static class StringArrayExtensions
 
         return string.Join("\n", resultLines);
     }
+
+    public static string FormatToTable(this string leftText, string rightText, string separator = "   ") => (new string[] { leftText, rightText }).FormatToTable(separator);
 }
