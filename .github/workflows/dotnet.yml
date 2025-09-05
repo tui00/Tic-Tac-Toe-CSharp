@@ -43,7 +43,7 @@ jobs:
           dotnet-version: 9.0.x
       - name: Publish Release
         run: |
-          dotnet publish --configuration Debug --output ./publish --self-contained false --framework net9.0
+          dotnet publish Tic-Tac-Toe/Tic-Tac-Toe.csproj --configuration Debug --output ./publish --self-contained false --framework net9.0
       - name: Create README.txt
         run: |
           echo "Чтобы запустить игру, установите .NET 9.0 Runtime:" > ./publish/README.txt
