@@ -29,7 +29,6 @@ jobs:
 
   publish-release:
     needs: build-test
-    if: github.ref == 'refs/heads/main'  # Только для ветки main
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +39,7 @@ jobs:
       - name: Publish Release
         run: |
           dotnet publish Tic-Tac-Toe/Tic-Tac-Toe.csproj `
-            --configuration Release `
+            --configuration Debug `
             --output ./publish `
             --self-contained false `
             --framework net9.0
