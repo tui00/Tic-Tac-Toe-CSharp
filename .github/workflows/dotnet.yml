@@ -46,7 +46,7 @@ jobs:
           dotnet publish Tic-Tac-Toe/Tic-Tac-Toe.csproj --configuration Debug --output ./publish --self-contained false --framework net9.0
       - name: Create README.txt
         run: |
-          echo "Чтобы запустить игру, установите .NET 9.0 Runtime:" > ./publish/README.txt
+          echo "Привет! Чтобы запустить игру, установите .NET 9.0 Runtime" > ./publish/README.txt
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
