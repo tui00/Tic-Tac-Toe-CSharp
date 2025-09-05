@@ -1,9 +1,12 @@
-﻿using static TicTacToe.TicTacToe;
+﻿using System.Collections.Concurrent;
+using static TicTacToe.TicTacToe;
 
 namespace TicTacToe;
 
 class Program
 {
+    static readonly List<string[]> statistics = [];
+
     static async Task Main(string[] args)
     {
         Console.WriteLine("Введите (f)ight для битвы, (s)uper fight для супер-битвы, (q)uit для выхода или (n)ormal mode для обычного режима:");
@@ -90,7 +93,7 @@ class Program
                     }
 
                     input -= '1';
-                    int cell = input + ((input < 3) ? 6 : ((input > 5) ? -6 : 0));  
+                    int cell = input + ((input < 3) ? 6 : ((input > 5) ? -6 : 0));
 
                     if (game.IsLegalMove(cell))
                     {
@@ -100,8 +103,8 @@ class Program
                 }
             }
         }
-
-        Console.WriteLine(GetStatistics(xWins, oWins, draws, time, game));
+        AddStatistics(xWins, oWins, draws, time, game);
+        Console.WriteLine(GetStatistics());
     }
     static async Task SuperFight()
     {
@@ -129,7 +132,7 @@ class Program
         DateTime time = DateTime.Now;
         Console.Clear();
 
-        var tasks = new List<Task<string>>();
+        var tasks = new List<Task>();
 
         uint enemy = 1;
         bool swap = false;
@@ -163,21 +166,39 @@ class Program
                     game.MakeTurn();
                 }
 
-                return GetStatistics(xWins, oWins, draws, time, game);
+                AddStatistics(xWins, oWins, draws, time, game);
             }));
             swap = !swap;
             if (!swap) enemy++;
         }
 
-        var results = await Task.WhenAll(tasks);
-        foreach (var result in results) Console.WriteLine(result);
+        await Task.WhenAll(tasks);
+        Console.WriteLine(GetStatistics());
     }
 
-    static string GetStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, TicTacToe game)
+    static string GetStatistics()
+    {
+        return TransposeToStringColumns(statistics).FormatToTable();
+    }
+
+    static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, TicTacToe game)
     {
         TimeSpan duration = DateTime.Now - startTime;
         string X = bots[game.ReadPlayerLevel(TicTacToe.X)].Item1;
         string O = bots[game.ReadPlayerLevel(TicTacToe.O)].Item1;
-        return $"{duration.TotalSeconds:F2}. {X} (X) vs {O} (O). Результат: X = {xWins}, O = {oWins}, Ничьи = {draws}";
+        string[] array = [$"{duration.TotalSeconds:F2}", $"{X} (X) vs {O} (O)", $"X победил: {xWins}", $"O победил: {oWins}", $"Ничьи: {draws}"];
+        statistics.Add(array);
     }
+    static string[] TransposeToStringColumns(List<string[]> rows)
+    {
+        if (rows.Count == 0) return [];
+
+        int maxCols = rows.Max(row => row.Length);
+        return [.. Enumerable.Range(0, maxCols)
+            .Select(col => string.Join("\n",
+                rows.Select(row => col < row.Length ? row[col] : "")
+            ))
+        ];
+    }
+
 }
