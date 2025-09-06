@@ -45,19 +45,12 @@ class Program
 
         TicTacToe game = new(XLevel, OLevel);
 
-        uint initalState = game.state;
         while (games > 0)
         {
             Console.Clear();
 
             Console.WriteLine($"Ходит {(game.ReadWhoseTurn() == X ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
-            for (int i = 0; i < 9; i++)
-            {
-                uint cell = game.ReadCellType(i); // Тип клетки: 0b00(Пусто), 0b01(X), 0b10(O), 0b11(Оба игрока в одной клетке(Ничья))
-                Console.Write($"{(cell == EMPTY ? "_" : (cell == X ? "X" : (cell == O ? "O" : "-")))}");
-                if ((i + 1) % 3 == 0) Console.WriteLine();
-                else Console.Write(" | ");
-            }
+            Console.WriteLine(game.ReadVisualBoard());
 
             if (game.ReadWinner() != EMPTY)
             {
@@ -68,7 +61,7 @@ class Program
                     case 0b11: draws++; break;
                 }
                 games--;
-                game.state = initalState;
+                game = new(XLevel, OLevel);
                 Thread.Sleep(1000);
                 continue;
             }
@@ -129,7 +122,6 @@ class Program
         }
 
         DateTime time = DateTime.Now;
-        Console.Clear();
 
         var tasks = new List<Task>();
 
@@ -146,8 +138,6 @@ class Program
 
                 TicTacToe game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
 
-                uint initalState = game.state;
-
                 while (games > 0)
                 {
                     if (game.ReadWinner() != 0)
@@ -159,7 +149,7 @@ class Program
                             case 0b11: draws++; break;
                         }
                         games--;
-                        game.state = initalState;
+                        game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
                         continue;
                     }
                     game.MakeTurn();
