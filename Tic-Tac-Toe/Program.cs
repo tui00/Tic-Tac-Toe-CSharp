@@ -45,7 +45,6 @@ class Program
 
         TicTacToe game = new(XLevel, OLevel);
 
-        uint initalState = game.state;
         while (games > 0)
         {
             Console.Clear();
@@ -68,7 +67,7 @@ class Program
                     case 0b11: draws++; break;
                 }
                 games--;
-                game.state = initalState;
+                game = new(XLevel, OLevel);
                 Thread.Sleep(1000);
                 continue;
             }
@@ -146,8 +145,6 @@ class Program
 
                 TicTacToe game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
 
-                uint initalState = game.state;
-
                 while (games > 0)
                 {
                     if (game.ReadWinner() != 0)
@@ -159,7 +156,7 @@ class Program
                             case 0b11: draws++; break;
                         }
                         games--;
-                        game.state = initalState;
+                        game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
                         continue;
                     }
                     game.MakeTurn();

@@ -55,7 +55,7 @@ public partial class TicTacToe
     //   2 - ИИ 2
     //   3 - ИИ 3
     //   ...
-    public uint state;
+    protected uint state;
     protected Stack<uint> oldStates = new(9);
 
     protected Random random = new();
