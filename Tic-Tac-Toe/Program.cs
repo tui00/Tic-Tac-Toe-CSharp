@@ -128,7 +128,6 @@ class Program
         }
 
         DateTime time = DateTime.Now;
-        Console.Clear();
 
         var tasks = new List<Task>();
 
