@@ -60,6 +60,8 @@ public partial class TicTacToe
 
     protected Random random = new();
 
+    public Logger logger = new();
+
     protected IBot? XBot;
     protected IBot? OBot;
 
@@ -109,8 +111,11 @@ public partial class TicTacToe
         uint level = ReadCurrentPlayerLevel();
         if (level != HUMAN)
         {
+            logger.Log($"{bots[level].Item1} думает...");
             cell = (ReadWhoseTurn() == X ? XBot : OBot)!.GetTurn(this, random);
         }
+        logger.Log($"{bots[level].Item1} ходит в {cell}");
+        logger.Log(ReadVisualBoard());
 
         oldStates.Push(state);
         ApplyTurn(cell);
