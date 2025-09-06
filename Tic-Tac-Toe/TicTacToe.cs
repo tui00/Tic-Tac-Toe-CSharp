@@ -89,9 +89,9 @@ public partial class TicTacToe
             char x1 = ReadCellType(y + 0) == EMPTY ? ' ' : (ReadCellType(y + 0) == X ? 'X' : (ReadCellType(y + 0) == O ? 'O' : '-'));
             char x2 = ReadCellType(y + 1) == EMPTY ? ' ' : (ReadCellType(y + 1) == X ? 'X' : (ReadCellType(y + 1) == O ? 'O' : '-'));
             char x3 = ReadCellType(y + 2) == EMPTY ? ' ' : (ReadCellType(y + 2) == X ? 'X' : (ReadCellType(y + 2) == O ? 'O' : '-'));
-            result += $"{x1} │ {x2} │ {x3}\n";
+            result += $"{x1} │ {x2} │ {x3}";
 
-            if (y != 6) result += $"──┼───┼──\n";
+            if (y != 6) result += $"\n──┼───┼──\n";
         }
         return result;
     }
