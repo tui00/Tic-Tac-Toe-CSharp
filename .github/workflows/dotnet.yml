@@ -11,10 +11,6 @@ on:
 
 jobs:
   core-build-test:
-    strategy:
-      fail-fast: true
-      matrix:
-        rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'osx-x64', 'osx-arm64']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +20,7 @@ jobs:
           dotnet-version: 9.0.x
       - name: Publish
         run: |
-          dotnet build TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_Core --self-contained false --framework net9.0
+          dotnet build TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --output ./publish_Core --self-contained false --framework net9.0
   publish-release:
     strategy:
       fail-fast: false
