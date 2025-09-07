@@ -1,6 +1,6 @@
-﻿using static TicTacToe.TicTacToe;
+﻿using static TicTacToe.Core.TicTacToe;
 
-namespace TicTacToe;
+namespace TicTacToe.Core;
 
 class Program
 {

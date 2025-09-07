@@ -1,6 +1,6 @@
-using TicTacToe.Bots;
+using TicTacToe.Core.Bots;
 
-namespace TicTacToe;
+namespace TicTacToe.Core;
 
 public partial class TicTacToe
 {

@@ -1,4 +1,4 @@
-namespace TicTacToe.Bots;
+namespace TicTacToe.Core.Bots;
 
 public class BestBot : IBot
 {

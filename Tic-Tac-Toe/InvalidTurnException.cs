@@ -1,4 +1,4 @@
-namespace TicTacToe;
+namespace TicTacToe.Core;
 
 [Serializable]
 public class InvalidTurnException : Exception

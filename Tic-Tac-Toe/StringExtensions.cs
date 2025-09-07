@@ -1,4 +1,4 @@
-namespace TicTacToe;
+namespace TicTacToe.Core;
 
 internal static class StringArrayExtensions
 {

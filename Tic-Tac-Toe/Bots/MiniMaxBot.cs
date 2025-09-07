@@ -1,6 +1,6 @@
-using static TicTacToe.TicTacToe;
+using static TicTacToe.Core.TicTacToe;
 
-namespace TicTacToe.Bots;
+namespace TicTacToe.Core.Bots;
 
 public class MiniMaxBot : IBot
 {
