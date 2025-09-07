@@ -9,17 +9,18 @@ class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Введите (f)ight для битвы, (s)uper fight для супер-битвы, (q)uit для выхода или (n)ormal mode для обычного режима:");
-        while (true)
+        while (statistics.Capacity == 0)
         {
             char input = Console.ReadKey(true).KeyChar;
             switch (input)
             {
-                case 'f': await Fight(); return;
-                case 's': await SuperFight(); return;
+                case 'f': await Fight(); break;
+                case 's': await SuperFight(); break;
                 case 'q': return;
-                case 'n': NormalMode(); return;
+                case 'n': NormalMode(); break;
             }
         }
+        Console.WriteLine(GetStatistics());
     }
     static void NormalMode()
     {
@@ -96,7 +97,6 @@ class Program
             }
         }
         AddStatistics(xWins, oWins, draws, time, game);
-        Console.WriteLine(GetStatistics());
     }
     static async Task SuperFight()
     {
@@ -162,7 +162,6 @@ class Program
         }
 
         await Task.WhenAll(tasks);
-        Console.WriteLine(GetStatistics());
     }
 
     static string GetStatistics()
