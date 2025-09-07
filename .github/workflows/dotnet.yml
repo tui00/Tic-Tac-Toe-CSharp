@@ -52,5 +52,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TicTacToe-build-${{ matrix.project }}-${{ matrix.os }}
+          name: ${{ matrix.project }}-build-${{ matrix.os }}
           path: ./publish_${{ matrix.project }}
