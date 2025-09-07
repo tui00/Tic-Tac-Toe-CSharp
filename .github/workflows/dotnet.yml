@@ -25,11 +25,6 @@ jobs:
       - name: Publish
         run: |
           dotnet publish TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_Core --self-contained false --framework net9.0
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TicTacToe.Core-${{ matrix.rid }}-build
-          path: ./publish_${{ matrix.rid }}_Core
   publish-release:
     strategy:
       fail-fast: false
