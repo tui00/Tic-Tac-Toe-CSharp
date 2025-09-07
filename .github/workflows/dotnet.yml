@@ -13,9 +13,9 @@ jobs:
   publish-release:
     strategy:
       matrix:
-        os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
+        rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'linux-loongarch64', 'osx-x64', 'osx-arm64']
         project: ['TicTacToe.Core']
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -24,12 +24,12 @@ jobs:
           dotnet-version: 9.0.x
       - name: Publish
         run: |
-          dotnet publish ${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Debug --output ./publish_${{ matrix.project }} --self-contained false --framework net9.0
+          dotnet publish ${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_${{ matrix.project }} --self-contained false --framework net9.0
       - name: Create README.txt
         run: |
-          echo "Привет! Чтобы запустить игру, установите .NET 9.0 Runtime" > ./publish_${{ matrix.project }}/README.txt
+          echo "Привет! Чтобы запустить игру, установите .NET 9.0 Runtime" > ./publish_${{ matrix.rid }}_${{ matrix.project }}/README.txt
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.project }}-build-${{ matrix.os }}
-          path: ./publish_${{ matrix.project }}
+          name: ${{ matrix.project }}-${{ matrix.rid }}-build
+          path: ./publish_${{ matrix.rid }}_${{ matrix.project }}
