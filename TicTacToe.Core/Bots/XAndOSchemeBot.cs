@@ -1,4 +1,4 @@
-using static TicTacToe.Core.TicTacToe;
+using static TicTacToe.Core.Game;
 
 namespace TicTacToe.Core.Bots;
 
@@ -9,13 +9,13 @@ public class XAndOSchemeBot : IBot
     protected bool enemyOnCenter;
     protected bool enemyOnEdge;
 
-    public int GetTurn(TicTacToe game, Random random)
+    public int GetTurn(Game game, Random random)
     {
         if (game.TryWinAndBlock(out int priorityCell)) return priorityCell;
         return game.ReadWhoseTurn() == X ? XScheme(game, random) : OScheme(game, random);
     }
 
-    protected int XScheme(TicTacToe game, Random random)
+    protected int XScheme(Game game, Random random)
     {
         uint round = game.ReadCurrentRound();
 
@@ -47,13 +47,13 @@ public class XAndOSchemeBot : IBot
 
         return game.GetBestTurn();
     }
-    protected static int OScheme(TicTacToe game, Random random)
+    protected static int OScheme(Game game, Random random)
     {
         if (game.IsLegalMove(4)) return 4;
         int OccupiedCorners = Corners.Count(corner => game.ReadCellType(corner) == X);
         if (OccupiedCorners >= 2)
         {
-            int[] Edges = TicTacToe.Edges;
+            int[] Edges = Game.Edges;
             random.Shuffle(Edges);
             foreach (int Edge in Edges) if (game.IsLegalMove(Edge)) return Edge;
         }

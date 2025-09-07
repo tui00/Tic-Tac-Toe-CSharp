@@ -1,4 +1,4 @@
-using static TicTacToe.Core.TicTacToe;
+using static TicTacToe.Core.Game;
 
 namespace TicTacToe.Core.Bots;
 
@@ -7,7 +7,7 @@ public class MiniMaxBot : IBot
     private static Dictionary<uint, (int cell, int score)> transpositionTable = [];
     private static readonly Lock tableLock = new();
 
-    public int GetTurn(TicTacToe game, Random random)
+    public int GetTurn(Game game, Random random)
     {
         if (game.TryWinAndBlock(out int cell)) return cell;
         int I = game.ReadWhoseTurn();
@@ -16,7 +16,7 @@ public class MiniMaxBot : IBot
         return result == -1 ? game.GetBestTurn() : result;
     }
 
-    protected (int cell, int score) Search(TicTacToe game, int I, int Enemy, ref Dictionary<uint, (int cell, int score)> transpositionTable, int depth = 0, int alpha = int.MinValue, int beta = int.MaxValue)
+    protected (int cell, int score) Search(Game game, int I, int Enemy, ref Dictionary<uint, (int cell, int score)> transpositionTable, int depth = 0, int alpha = int.MinValue, int beta = int.MaxValue)
     {
         lock (tableLock)
         {
@@ -68,7 +68,7 @@ public class MiniMaxBot : IBot
         return (bestCell, bestScore);
     }
 
-    protected virtual bool TryEvaluate(TicTacToe game, int I, int depth, out int result)
+    protected virtual bool TryEvaluate(Game game, int I, int depth, out int result)
     {
         uint winner = game.ReadWinner();
         result = 10 - depth;

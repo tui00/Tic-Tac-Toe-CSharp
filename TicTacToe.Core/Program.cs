@@ -1,4 +1,4 @@
-﻿using static TicTacToe.Core.TicTacToe;
+﻿using static TicTacToe.Core.Game;
 
 namespace TicTacToe.Core;
 
@@ -24,7 +24,7 @@ class Program
     }
     static void NormalMode()
     {
-        var bots = TicTacToe.bots;
+        var bots = Game.bots;
 
         Console.WriteLine("Уровни:");
         for (int i = 0; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
@@ -44,7 +44,7 @@ class Program
         Console.WriteLine("Введите кол-во игр (меньше 100):");
         while ((!uint.TryParse(Console.ReadLine(), out games)) || (games > 100)) ;
 
-        TicTacToe game = new(XLevel, OLevel);
+        Game game = new(XLevel, OLevel);
 
         while (games > 0)
         {
@@ -100,7 +100,7 @@ class Program
     }
     static async Task SuperFight()
     {
-        var bots = TicTacToe.bots;
+        var bots = Game.bots;
         var tasks = new List<Task>();
         for (int i = 1; i < bots.Length; i++)
         {
@@ -112,7 +112,7 @@ class Program
     }
     static async Task Fight(int I = -1)
     {
-        var bots = TicTacToe.bots;
+        var bots = Game.bots;
         if (I == -1)
         {
             Console.WriteLine("Уровни:");
@@ -136,7 +136,7 @@ class Program
                 uint xWins = 0, oWins = 0, draws = 0;
                 int games = 1000;
 
-                TicTacToe game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
+                Game game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
 
                 while (games > 0)
                 {
@@ -169,11 +169,11 @@ class Program
         return TransposeToStringColumns(statistics).GenerateTable(" | ");
     }
 
-    static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, TicTacToe game)
+    static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, Game game)
     {
         TimeSpan duration = DateTime.Now - startTime;
-        string X = bots[game.ReadPlayerLevel(TicTacToe.X)].Item1;
-        string O = bots[game.ReadPlayerLevel(TicTacToe.O)].Item1;
+        string X = bots[game.ReadPlayerLevel(Game.X)].Item1;
+        string O = bots[game.ReadPlayerLevel(Game.O)].Item1;
         string[] array = [$"{duration.TotalSeconds:F2}", $"{X} (X) vs {O} (O)", $"X победил: {xWins}", $"O победил: {oWins}", $"Ничьи: {draws}"];
         statistics.Add(array);
     }

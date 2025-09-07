@@ -1,4 +1,4 @@
-using static TicTacToe.Core.TicTacToe;
+using static TicTacToe.Core.Game;
 
 namespace TicTacToe.Core.Bots;
 
@@ -9,7 +9,7 @@ public class DramatistBot : IBot
     private const int CONFLICT   = 1; // 3–4 ход: напряжение
     private const int CLIMAX     = 2; // 5+ ход: кульминация
 
-    public int GetTurn(TicTacToe game, Random random)
+    public int GetTurn(Game game, Random random)
     {
         // 🛑 1. ВСЕГДА СНАЧАЛА — победа или блокировка
         if (game.TryWinAndBlock(out int priorityCell))
@@ -19,7 +19,7 @@ public class DramatistBot : IBot
         return PlayAct(game, random);
     }
 
-    private int HandlePriorityMove(TicTacToe game, int cell, Random random)
+    private int HandlePriorityMove(Game game, int cell, Random random)
     {
         uint turn = game.ReadCurrentTurn();
 
@@ -34,7 +34,7 @@ public class DramatistBot : IBot
         return cell;
     }
 
-    private int PlayAct(TicTacToe game, Random random)
+    private int PlayAct(Game game, Random random)
     {
         uint turn = game.ReadCurrentTurn();
         int player = game.ReadWhoseTurn();
@@ -57,7 +57,7 @@ public class DramatistBot : IBot
     };
 
     // 🎭 Акт 1: Экспозиция — «Ты герой. Пока что.»
-    private static int ExpositionStrategy(TicTacToe game, Random random)
+    private static int ExpositionStrategy(Game game, Random random)
     {
         // В 70% — уступаем центральному напору
         if (game.IsLegalMove(CENTER) && random.Next(100) < 70)
@@ -70,7 +70,7 @@ public class DramatistBot : IBot
     }
 
     // ⚔️ Акт 2: Конфликт — «Ты думал, что контролируешь?»
-    private static int ConflictStrategy(TicTacToe game, Random random, int player, int opponent)
+    private static int ConflictStrategy(Game game, Random random, int player, int opponent)
     {
         // Если мы в центре — контратакуем по диагонали
         if (game.ReadCellType(CENTER) == player)
@@ -85,7 +85,7 @@ public class DramatistBot : IBot
     }
 
     // 🔥 Акт 3: Кульминация — «Моя победа. Мой театр.»
-    private static int ClimaxStrategy(TicTacToe game, int player, Random random)
+    private static int ClimaxStrategy(Game game, int player, Random random)
     {
         // В 40% — делаем неочевидный, но безопасный ход
         if (random.Next(100) < 40)
@@ -96,7 +96,7 @@ public class DramatistBot : IBot
     }
 
     // 🎲 Случайный угол
-    private static int PickRandomCorner(TicTacToe game, Random random)
+    private static int PickRandomCorner(Game game, Random random)
     {
         var corners = Corners;
         random.Shuffle(corners);
@@ -104,7 +104,7 @@ public class DramatistBot : IBot
     }
 
     // 🎲 Случайное ребро
-    private static int PickRandomEdge(TicTacToe game, Random random)
+    private static int PickRandomEdge(Game game, Random random)
     {
         var edges = Edges;
         random.Shuffle(edges);
@@ -112,7 +112,7 @@ public class DramatistBot : IBot
     }
 
     // 🔮 Противоположный угол от последнего хода противника
-    private static int FindCounterCorner(TicTacToe game, int opponent)
+    private static int FindCounterCorner(Game game, int opponent)
     {
         var opposite = new Dictionary<int, int> { { 0, 8 }, { 2, 6 }, { 6, 2 }, { 8, 0 } };
         for (int cell = 0; cell < 9; cell++)
