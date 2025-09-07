@@ -13,7 +13,7 @@ jobs:
   publish-release:
     strategy:
       matrix:
-        rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'linux-loongarch64', 'osx-x64', 'osx-arm64']
+        rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'osx-x64', 'osx-arm64']
         project: ['TicTacToe.Core']
     runs-on: ubuntu-latest
     steps:
