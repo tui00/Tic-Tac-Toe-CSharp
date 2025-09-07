@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'osx-x64', 'osx-arm64']
-        project: ['TicTacToe.Core']
+        project: ['TicTacToe.Core', 'TicTacToe.Api']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
