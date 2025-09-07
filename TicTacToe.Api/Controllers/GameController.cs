@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using TicTacToe.Core;
 
 namespace TicTacToe.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class GameController : ControllerBase
+public class GameController(IMemoryCache cache) : ControllerBase
 {
-    // Храним игры в памяти (для теста)
-    private static readonly Dictionary<Guid, Game> Games = [];
+    private readonly IMemoryCache _cache = cache;
 
     // POST /api/game/new
     [HttpPost("new")]
@@ -16,7 +16,7 @@ public class GameController : ControllerBase
     {
         Game game = new(newGame.XLevel, newGame.OLevel);
         Guid id = Guid.NewGuid();
-        Games.Add(id, game);
+        _cache.Set(id, game, TimeSpan.FromMinutes(30));
 
         return Ok(new NewGameResponse(id));
     }
@@ -25,30 +25,25 @@ public class GameController : ControllerBase
     [HttpGet("{id}")]
     public IActionResult GetGame(Guid id)
     {
-        if (!Games.TryGetValue(id, out Game? game))
+        if (!_cache.TryGetValue(id, out Game? game))
             return NotFound(new { error = "Game not found" });
 
-        return Ok(new GameResponse(FormatBoard(game), game.ReadWhoseTurn(), game.ReadWinner()));
+        return Ok(new GameResponse(FormatBoard(game!), game!.ReadWhoseTurn(), game.ReadWinner()));
     }
 
     // POST /api/game/{id}
     [HttpPost("{id}")]
     public IActionResult MakeMove(Guid id, [FromBody] MakeTurnRequest request)
     {
-        if (!Games.TryGetValue(id, out Game? game))
+        if (!_cache.TryGetValue(id, out Game? game))
             return NotFound(new { error = "Game not found" });
 
-        game.MakeTurn(request.Cell);
+        game!.MakeTurn(request.Cell);
         if (game.ReadCurrentPlayerLevel() != Game.HUMAN) game.MakeTurn(); // Сходить за бота
 
-        Games[id] = game;
+        _cache.Set(id, game, TimeSpan.FromMinutes(30));
 
-        var temp = GetGame(id);
-        if (game.ReadWinner() != 0)
-        {
-            Games.Remove(id);
-        }
-        return temp;
+        return GetGame(id);
     }
 
     private static string FormatBoard(Game game)

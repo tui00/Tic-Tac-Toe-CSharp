@@ -2,6 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Добавь контроллеры
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
