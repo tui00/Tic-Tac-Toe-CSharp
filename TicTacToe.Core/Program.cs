@@ -1,192 +1,192 @@
-﻿using static TicTacToe.Core.Game;
+﻿// using static TicTacToe.Core.Game;
 
-namespace TicTacToe.Core;
+// namespace TicTacToe.Core;
 
-class Program
-{
-    static readonly List<string[]> statistics = [];
+// class Program
+// {
+//     static readonly List<string[]> statistics = [];
 
-    static async Task Main(string[] args)
-    {
-        Console.WriteLine("Введите (f)ight для битвы, (s)uper fight для супер-битвы, (q)uit для выхода или (n)ormal mode для обычного режима:");
-        while (statistics.Capacity == 0)
-        {
-            char input = Console.ReadKey(true).KeyChar;
-            switch (input)
-            {
-                case 'f': await Fight(); break;
-                case 's': await SuperFight(); break;
-                case 'q': return;
-                case 'n': NormalMode(); break;
-            }
-        }
-        Console.WriteLine(GetStatistics());
-    }
-    static void NormalMode()
-    {
-        var bots = Game.bots;
+//     static async Task Main(string[] args)
+//     {
+//         Console.WriteLine("Введите (f)ight для битвы, (s)uper fight для супер-битвы, (q)uit для выхода или (n)ormal mode для обычного режима:");
+//         while (statistics.Capacity == 0)
+//         {
+//             char input = Console.ReadKey(true).KeyChar;
+//             switch (input)
+//             {
+//                 case 'f': await Fight(); break;
+//                 case 's': await SuperFight(); break;
+//                 case 'q': return;
+//                 case 'n': NormalMode(); break;
+//             }
+//         }
+//         Console.WriteLine(GetStatistics());
+//     }
+//     static void NormalMode()
+//     {
+//         var bots = Game.bots;
 
-        Console.WriteLine("Уровни:");
-        for (int i = 0; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
+//         Console.WriteLine("Уровни:");
+//         for (int i = 0; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
 
-        uint XLevel;
-        Console.WriteLine("Введите уровень для X:");
-        while ((!uint.TryParse(Console.ReadLine(), out XLevel)) || (XLevel >= bots.Length)) ;
-        uint OLevel;
-        Console.WriteLine("Введите уровень для O:");
-        while ((!uint.TryParse(Console.ReadLine(), out OLevel)) || (OLevel >= bots.Length)) ;
+//         uint XLevel;
+//         Console.WriteLine("Введите уровень для X:");
+//         while ((!uint.TryParse(Console.ReadLine(), out XLevel)) || (XLevel >= bots.Length)) ;
+//         uint OLevel;
+//         Console.WriteLine("Введите уровень для O:");
+//         while ((!uint.TryParse(Console.ReadLine(), out OLevel)) || (OLevel >= bots.Length)) ;
 
-        DateTime time = DateTime.Now;
+//         DateTime time = DateTime.Now;
 
-        uint xWins = 0, oWins = 0, draws = 0;
+//         uint xWins = 0, oWins = 0, draws = 0;
 
-        uint games;
-        Console.WriteLine("Введите кол-во игр (меньше 100):");
-        while ((!uint.TryParse(Console.ReadLine(), out games)) || (games > 100)) ;
+//         uint games;
+//         Console.WriteLine("Введите кол-во игр (меньше 100):");
+//         while ((!uint.TryParse(Console.ReadLine(), out games)) || (games > 100)) ;
 
-        Game game = new(XLevel, OLevel);
+//         Game game = new(XLevel, OLevel);
 
-        while (games > 0)
-        {
-            Console.Clear();
+//         while (games > 0)
+//         {
+//             Console.Clear();
 
-            Console.WriteLine($"Ходит {(game.ReadWhoseTurn() == X ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
-            Console.WriteLine(game.ReadVisualBoard());
+//             Console.WriteLine($"Ходит {(game.ReadWhoseTurn() == X ? "X" : "O")}. NumPad это поле игры. (Q)uit для выхода");
+//             Console.WriteLine(game.ReadVisualBoard());
 
-            if (game.ReadWinner() != EMPTY)
-            {
-                switch (game.ReadWinner())
-                {
-                    case 0b01: xWins++; break;
-                    case 0b10: oWins++; break;
-                    case 0b11: draws++; break;
-                }
-                games--;
-                game = new(XLevel, OLevel);
-                Thread.Sleep(1000);
-                continue;
-            }
-            if (game.ReadCurrentPlayerLevel() != HUMAN)
-            {
-                game.MakeTurn();
-                Thread.Sleep(500);
-            }
-            else
-            {
-                while (true)
-                {
-                    char input = Console.ReadKey(true).KeyChar;
+//             if (game.ReadWinner() != EMPTY)
+//             {
+//                 switch (game.ReadWinner())
+//                 {
+//                     case 0b01: xWins++; break;
+//                     case 0b10: oWins++; break;
+//                     case 0b11: draws++; break;
+//                 }
+//                 games--;
+//                 game = new(XLevel, OLevel);
+//                 Thread.Sleep(1000);
+//                 continue;
+//             }
+//             if (game.ReadCurrentPlayerLevel() != HUMAN)
+//             {
+//                 game.MakeTurn();
+//                 Thread.Sleep(500);
+//             }
+//             else
+//             {
+//                 while (true)
+//                 {
+//                     char input = Console.ReadKey(true).KeyChar;
 
-                    if (input == 'Q') return;
-                    if (input == 'U')
-                    {
-                        if (game.ReadPlayerLevel(game.ReadWhoseTurn() ^ XO) != HUMAN) game.Undo();
-                        game.Undo();
-                        break;
-                    }
+//                     if (input == 'Q') return;
+//                     if (input == 'U')
+//                     {
+//                         if (game.ReadPlayerLevel(game.ReadWhoseTurn() ^ XO) != HUMAN) game.Undo();
+//                         game.Undo();
+//                         break;
+//                     }
 
-                    input -= '1';
-                    int cell = input + ((input < 3) ? 6 : ((input > 5) ? -6 : 0));
+//                     input -= '1';
+//                     int cell = input + ((input < 3) ? 6 : ((input > 5) ? -6 : 0));
 
-                    if (game.IsLegalMove(cell))
-                    {
-                        game.MakeTurn(cell);
-                        break;
-                    }
-                }
-            }
-        }
-        AddStatistics(xWins, oWins, draws, time, game);
-    }
-    static async Task SuperFight()
-    {
-        var bots = Game.bots;
-        var tasks = new List<Task>();
-        for (int i = 1; i < bots.Length; i++)
-        {
-            int iCopy = i;
-            tasks.Add(Fight(iCopy));
-        }
+//                     if (game.IsLegalMove(cell))
+//                     {
+//                         game.MakeTurn(cell);
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//         AddStatistics(xWins, oWins, draws, time, game);
+//     }
+//     static async Task SuperFight()
+//     {
+//         var bots = Game.bots;
+//         var tasks = new List<Task>();
+//         for (int i = 1; i < bots.Length; i++)
+//         {
+//             int iCopy = i;
+//             tasks.Add(Fight(iCopy));
+//         }
 
-        await Task.WhenAll(tasks);
-    }
-    static async Task Fight(int I = -1)
-    {
-        var bots = Game.bots;
-        if (I == -1)
-        {
-            Console.WriteLine("Уровни:");
-            for (int i = 1; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
-            Console.WriteLine("Введите уровень:");
-            while ((!int.TryParse(Console.ReadLine(), out I)) || (I > bots.Length) || (I == 0)) ;
-        }
+//         await Task.WhenAll(tasks);
+//     }
+//     static async Task Fight(int I = -1)
+//     {
+//         var bots = Game.bots;
+//         if (I == -1)
+//         {
+//             Console.WriteLine("Уровни:");
+//             for (int i = 1; i < bots.Length; i++) Console.WriteLine($"{i}. {bots[i].Item1}");
+//             Console.WriteLine("Введите уровень:");
+//             while ((!int.TryParse(Console.ReadLine(), out I)) || (I > bots.Length) || (I == 0)) ;
+//         }
 
-        DateTime time = DateTime.Now;
+//         DateTime time = DateTime.Now;
 
-        var tasks = new List<Task>();
+//         var tasks = new List<Task>();
 
-        uint enemy = 1;
-        bool swap = false;
-        while (enemy < bots.Length)
-        {
-            uint enemyCopy = enemy;
-            bool swapCopy = swap;
-            tasks.Add(Task.Run(() =>
-            {
-                uint xWins = 0, oWins = 0, draws = 0;
-                int games = 1000;
+//         uint enemy = 1;
+//         bool swap = false;
+//         while (enemy < bots.Length)
+//         {
+//             uint enemyCopy = enemy;
+//             bool swapCopy = swap;
+//             tasks.Add(Task.Run(() =>
+//             {
+//                 uint xWins = 0, oWins = 0, draws = 0;
+//                 int games = 1000;
 
-                Game game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
+//                 Game game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
 
-                while (games > 0)
-                {
-                    if (game.ReadWinner() != 0)
-                    {
-                        switch (game.ReadWinner())
-                        {
-                            case 0b01: xWins++; break;
-                            case 0b10: oWins++; break;
-                            case 0b11: draws++; break;
-                        }
-                        games--;
-                        game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
-                        continue;
-                    }
-                    game.MakeTurn();
-                }
+//                 while (games > 0)
+//                 {
+//                     if (game.ReadWinner() != 0)
+//                     {
+//                         switch (game.ReadWinner())
+//                         {
+//                             case 0b01: xWins++; break;
+//                             case 0b10: oWins++; break;
+//                             case 0b11: draws++; break;
+//                         }
+//                         games--;
+//                         game = new(swapCopy ? enemyCopy : (uint)I, swapCopy ? (uint)I : enemyCopy);
+//                         continue;
+//                     }
+//                     game.MakeTurn();
+//                 }
 
-                AddStatistics(xWins, oWins, draws, time, game);
-            }));
-            swap = !swap;
-            if (!swap) enemy++;
-        }
+//                 AddStatistics(xWins, oWins, draws, time, game);
+//             }));
+//             swap = !swap;
+//             if (!swap) enemy++;
+//         }
 
-        await Task.WhenAll(tasks);
-    }
+//         await Task.WhenAll(tasks);
+//     }
 
-    static string GetStatistics()
-    {
-        return TransposeToStringColumns(statistics).GenerateTable(" | ");
-    }
+//     static string GetStatistics()
+//     {
+//         return TransposeToStringColumns(statistics).GenerateTable(" | ");
+//     }
 
-    static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, Game game)
-    {
-        TimeSpan duration = DateTime.Now - startTime;
-        string X = bots[game.ReadPlayerLevel(Game.X)].Item1;
-        string O = bots[game.ReadPlayerLevel(Game.O)].Item1;
-        string[] array = [$"{duration.TotalSeconds:F2}", $"{X} (X) vs {O} (O)", $"X победил: {xWins}", $"O победил: {oWins}", $"Ничьи: {draws}"];
-        statistics.Add(array);
-    }
-    static string[] TransposeToStringColumns(List<string[]> rows)
-    {
-        if (rows.Count == 0) return [];
+//     static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, Game game)
+//     {
+//         TimeSpan duration = DateTime.Now - startTime;
+//         string X = bots[game.ReadPlayerLevel(Game.X)].Item1;
+//         string O = bots[game.ReadPlayerLevel(Game.O)].Item1;
+//         string[] array = [$"{duration.TotalSeconds:F2}", $"{X} (X) vs {O} (O)", $"X победил: {xWins}", $"O победил: {oWins}", $"Ничьи: {draws}"];
+//         statistics.Add(array);
+//     }
+//     static string[] TransposeToStringColumns(List<string[]> rows)
+//     {
+//         if (rows.Count == 0) return [];
 
-        int maxCols = rows.Max(row => row.Length);
-        return [.. Enumerable.Range(0, maxCols)
-            .Select(col => string.Join("\n",
-                rows.Select(row => col < row.Length ? row[col] : "")
-            ))
-        ];
-    }
+//         int maxCols = rows.Max(row => row.Length);
+//         return [.. Enumerable.Range(0, maxCols)
+//             .Select(col => string.Join("\n",
+//                 rows.Select(row => col < row.Length ? row[col] : "")
+//             ))
+//         ];
+//     }
 
-}
+// }
