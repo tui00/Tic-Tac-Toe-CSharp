@@ -1,6 +1,4 @@
-using static TicTacToe.TicTacToe;
-
-namespace TicTacToe;
+namespace TicTacToe.Bots;
 
 public class BestBot : IBot
 {

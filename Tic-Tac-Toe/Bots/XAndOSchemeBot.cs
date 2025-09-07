@@ -1,6 +1,6 @@
 using static TicTacToe.TicTacToe;
 
-namespace TicTacToe;
+namespace TicTacToe.Bots;
 
 public class XAndOSchemeBot : IBot
 {

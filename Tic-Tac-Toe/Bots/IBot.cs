@@ -1,4 +1,4 @@
-namespace TicTacToe;
+namespace TicTacToe.Bots;
 
 public interface IBot
 {

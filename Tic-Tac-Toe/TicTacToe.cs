@@ -1,5 +1,6 @@
+using TicTacToe.Bots;
+
 namespace TicTacToe;
-// lk означает Для Алисы. БЕЗ КОДА
 
 public partial class TicTacToe
 {

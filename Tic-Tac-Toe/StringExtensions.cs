@@ -2,7 +2,7 @@ namespace TicTacToe;
 
 internal static class StringArrayExtensions
 {
-    public static string FormatToTable(this string[] columns, string separator = "   ")
+    public static string GenerateTable(this string[] columns, string separator = "   ")
     {
         string[][] columnsLines = [.. columns.Select(column => column.Split('\n'))];
         int[] columnsWidths = [.. columnsLines.Select(lines => lines.Max(line => line.Length))];
@@ -23,6 +23,4 @@ internal static class StringArrayExtensions
 
         return string.Join("\n", resultLines);
     }
-
-    public static string FormatToTable(this string leftText, string rightText, string separator = "   ") => (new string[] { leftText, rightText }).FormatToTable(separator);
 }

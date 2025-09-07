@@ -167,7 +167,7 @@ class Program
 
     static string GetStatistics()
     {
-        return TransposeToStringColumns(statistics).FormatToTable(" | ");
+        return TransposeToStringColumns(statistics).GenerateTable(" | ");
     }
 
     static void AddStatistics(uint xWins, uint oWins, uint draws, DateTime startTime, TicTacToe game)
