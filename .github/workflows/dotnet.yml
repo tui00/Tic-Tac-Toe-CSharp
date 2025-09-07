@@ -10,12 +10,33 @@ on:
     branches: '**'
 
 jobs:
+  core-build-test:
+    strategy:
+      fail-fast: true
+      matrix:
+        rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'osx-x64', 'osx-arm64']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Publish
+        run: |
+          dotnet publish TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_Core --self-contained false --framework net9.0
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TicTacToe.Core-${{ matrix.rid }}-build
+          path: ./publish_${{ matrix.rid }}_Core
   publish-release:
     strategy:
       fail-fast: false
       matrix:
         rid: ['win-x64', 'win-x86', 'win-arm64', 'linux-x64', 'linux-musl-x64', 'linux-musl-arm64', 'linux-arm', 'linux-arm64', 'linux-bionic-arm64', 'osx-x64', 'osx-arm64']
-        project: ['TicTacToe.Core', 'TicTacToe.Api']
+        project: ['TicTacToe.Api']
+    needs: core-build-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
