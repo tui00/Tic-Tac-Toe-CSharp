@@ -1,11 +1,11 @@
-using static TicTacToe.Core.TicTacToe;
+using static TicTacToe.Core.Game;
 
 namespace TicTacToe.Core.Bots;
 
 public class WorstBot : MiniMaxBot, IBot
 {
     private static Dictionary<uint, (int cell, int score)> worstTranspositionTable = [];
-    public new int GetTurn(TicTacToe game, Random random)
+    public new int GetTurn(Game game, Random random)
     {
         int I = game.ReadWhoseTurn();
         int Enemy = game.ReadWhoseTurn() ^ XO;
@@ -13,7 +13,7 @@ public class WorstBot : MiniMaxBot, IBot
         return result == -1 ? game.GetWorstTurn() : result;
     }
 
-    protected override bool TryEvaluate(TicTacToe game, int I, int depth, out int result)
+    protected override bool TryEvaluate(Game game, int I, int depth, out int result)
     {
         uint winner = game.ReadWinner();
         result = 10 - depth;

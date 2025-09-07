@@ -2,7 +2,7 @@ using TicTacToe.Core.Bots;
 
 namespace TicTacToe.Core;
 
-public partial class TicTacToe
+public partial class Game
 {
     public const int NEXT_TURN = 18; // Кто ходит следуший
     public const int WINNER = 19; // Кто победил
@@ -64,7 +64,7 @@ public partial class TicTacToe
     protected IBot? XBot;
     protected IBot? OBot;
 
-    public TicTacToe(uint xLevel, uint oLevel)
+    public Game(uint xLevel, uint oLevel)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(xLevel, (uint)bots.Length, nameof(xLevel));
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(oLevel, (uint)bots.Length, nameof(oLevel));

@@ -2,5 +2,5 @@ namespace TicTacToe.Core.Bots;
 
 public interface IBot
 {
-    abstract int GetTurn(TicTacToe game, Random random);
+    abstract int GetTurn(Game game, Random random);
 }
