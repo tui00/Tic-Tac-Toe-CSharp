@@ -35,6 +35,7 @@ jobs:
     strategy:
       matrix:
         os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
+        project: ['TicTacToe.Core']
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -42,14 +43,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Publish Release
+      - name: Publish
         run: |
-          dotnet publish Tic-Tac-Toe/Tic-Tac-Toe.csproj --configuration Debug --output ./publish --self-contained false --framework net9.0
+          dotnet publish ${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Debug --output ./publish_${{ matrix.project }} --self-contained false --framework net9.0
       - name: Create README.txt
         run: |
-          echo "Привет! Чтобы запустить игру, установите .NET 9.0 Runtime" > ./publish/README.txt
-      - name: Upload Release Artifact
+          echo "Привет! Чтобы запустить игру, установите .NET 9.0 Runtime" > ./publish_${{ matrix.project }}/README.txt
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TicTacToe-Release-build-${{ matrix.os }}
-          path: ./publish
+          name: TicTacToe-build-${{ matrix.project }}-${{ matrix.os }}
+          path: ./publish_${{ matrix.project }}
