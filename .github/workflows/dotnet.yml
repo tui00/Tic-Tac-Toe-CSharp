@@ -24,7 +24,7 @@ jobs:
           dotnet-version: 9.0.x
       - name: Publish
         run: |
-          dotnet publish TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_Core --self-contained false --framework net9.0
+          dotnet build TicTacToe.Core/TicTacToe.Core.csproj --configuration Debug --runtime ${{ matrix.rid }} --output ./publish_${{ matrix.rid }}_Core --self-contained false --framework net9.0
   publish-release:
     strategy:
       fail-fast: false
