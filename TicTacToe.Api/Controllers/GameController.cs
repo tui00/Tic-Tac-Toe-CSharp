@@ -21,6 +21,13 @@ public class GameController(IMemoryCache cache) : ControllerBase
         return Ok(new NewGameResponse(id));
     }
 
+    // GET /api/game/list
+    [HttpGet("list")]
+    public IActionResult ListGames()
+    {
+        return Ok(new ListGamesResponse([]));
+    }
+
     // GET /api/game/{id}
     [HttpGet("{id}")]
     public IActionResult GetGame(Guid id)
@@ -64,3 +71,5 @@ public record NewGameResponse(Guid Id);
 
 public record GameResponse(string Board, int Turn, uint Winner);
 public record MakeTurnRequest(int Cell);
+
+public record ListGamesResponse(Guid[] Ids);
