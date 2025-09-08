@@ -71,6 +71,11 @@ class Program
             Console.WriteLine();
         }
 
+        // Ввывод поля
+        PrintGameAndCheckWin(response, joinCode);
+        // Информационное сообщение
+        Console.WriteLine($"Ожиданние хода...");
+
         while (true)
         {
             // POLLING
