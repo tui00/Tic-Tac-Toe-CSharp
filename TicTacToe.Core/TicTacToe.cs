@@ -80,20 +80,6 @@ public partial class Game
     // Узнать тип клетки
     public uint ReadCellType(int cell) => (state >> (cell * 2)) & 0b11u;
     public uint ReadBoard() => state & 0x3FFFF;
-    public string ReadVisualBoard()
-    {
-        string result = "";
-        for (int y = 0; y < 9; y += 3)
-        {
-            char x1 = ReadCellType(y + 0) == EMPTY ? ' ' : (ReadCellType(y + 0) == X ? 'X' : (ReadCellType(y + 0) == O ? 'O' : '-'));
-            char x2 = ReadCellType(y + 1) == EMPTY ? ' ' : (ReadCellType(y + 1) == X ? 'X' : (ReadCellType(y + 1) == O ? 'O' : '-'));
-            char x3 = ReadCellType(y + 2) == EMPTY ? ' ' : (ReadCellType(y + 2) == X ? 'X' : (ReadCellType(y + 2) == O ? 'O' : '-'));
-            result += $"{x1} │ {x2} │ {x3}";
-
-            if (y != 6) result += $"\n──┼───┼──\n";
-        }
-        return result;
-    }
     // Получить уровень текущего игрока
     public uint ReadPlayerLevel(int player) => (state >> (player == X ? X_LEVEL : O_LEVEL)) & 0b1111;
     public uint ReadCurrentPlayerLevel() => ReadPlayerLevel(ReadWhoseTurn());
