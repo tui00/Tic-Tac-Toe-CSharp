@@ -86,9 +86,14 @@ class Program
             // Ввод клетки
             Console.WriteLine("Введите клетку, куда вы хотите сходить, с NumPad:");
             int input;
-            do { input = Console.ReadKey(true).KeyChar; } while (input > '9' && input < '1');
-            input -= '1';
-            input += (input < 3) ? 6 : ((input > 5) ? -6 : 0);
+            bool? isLegal;
+            do
+            {
+                input = Console.ReadKey(true).KeyChar;
+                input -= '1';
+                input += (input < 3) ? 6 : ((input > 5) ? -6 : 0);
+                isLegal = (await client.GetFromJsonAsync<IsLegalResponse>($"game/{joinCode}/isLegal/{input}"))?.IsLegal;
+            } while (isLegal != true);
 
             // Отправка хода
             HttpResponseMessage responseMessage = await client.PostAsJsonAsync<MakeTurnRequest>($"game/{joinCode}", new(input));
@@ -165,3 +170,5 @@ public record GameResponse(string Board, int Turn, uint Winner);
 public record MakeTurnRequest(int Cell);
 
 public record ListGamesResponse(Guid[] Ids);
+
+public record IsLegalResponse(bool IsLegal);
