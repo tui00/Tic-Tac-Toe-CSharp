@@ -32,6 +32,16 @@ public class GameController(IMemoryCache cache) : ControllerBase
         return Ok(new ListGamesResponse(activeGuids));
     }
 
+    // GET /api/game/{id}/isLegal/{cell}
+    [HttpGet("{id}/isLegal/{cell}")]
+    public IActionResult IsLegal(Guid id, int cell)
+    {
+        if (!_cache.TryGetValue(id, out Game? game))
+            return NotFound(new { error = "Game not found" });
+
+        return Ok(new IsLegalResponse(game!.IsLegalMove(cell)));
+    }
+
     // GET /api/game/{id}
     [HttpGet("{id}")]
     public IActionResult GetGame(Guid id)
@@ -77,3 +87,5 @@ public record GameResponse(string Board, int Turn, uint Winner);
 public record MakeTurnRequest(int Cell);
 
 public record ListGamesResponse(Guid[] Ids);
+
+public record IsLegalResponse(bool IsLegal);
