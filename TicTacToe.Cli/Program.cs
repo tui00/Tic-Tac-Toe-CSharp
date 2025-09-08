@@ -18,7 +18,7 @@ class Program
             switch (Console.ReadKey(true).KeyChar)
             {
                 case 'c': joinCode = await Create(client); break;
-                case 'j': joinCode = Join(client); break;
+                case 'j': joinCode = await Join(client); break;
                 case 'q': return;
                 default: continue;
             }
@@ -27,11 +27,16 @@ class Program
         Console.WriteLine(joinCode);
     }
 
-    internal static Guid Join(HttpClient client)
+    internal static async Task<Guid> Join(HttpClient client)
     {
         Console.WriteLine("Введите код игры: ");
         Guid id;
-        while (!Guid.TryParse(Console.ReadLine(), out id)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
+        ListGamesResponse? response;
+        do
+        {
+            response = await client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException("Сервер не вернул список игр. Проверьте подключение."); ;
+            while (!Guid.TryParse(Console.ReadLine(), out id)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
+        } while (!response.Ids.Contains(id));
         return id;
     }
 
@@ -70,3 +75,5 @@ public record NewGameResponse(Guid Id);
 
 public record GameResponse(string Board, int Turn, uint Winner);
 public record MakeTurnRequest(int Cell);
+
+public record ListGamesResponse(Guid[] Ids);
