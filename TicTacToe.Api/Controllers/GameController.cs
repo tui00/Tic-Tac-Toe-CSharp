@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using TicTacToe.Core;
@@ -9,6 +10,7 @@ namespace TicTacToe.Api.Controllers;
 public class GameController(IMemoryCache cache) : ControllerBase
 {
     private readonly IMemoryCache _cache = cache;
+    private static readonly ConcurrentBag<Guid> _usedGuids = [];
 
     // POST /api/game/new
     [HttpPost("new")]
@@ -17,6 +19,7 @@ public class GameController(IMemoryCache cache) : ControllerBase
         Game game = new(newGame.XLevel, newGame.OLevel);
         Guid id = Guid.NewGuid();
         _cache.Set(id, game, TimeSpan.FromMinutes(30));
+        _usedGuids.Add(id);
 
         return Ok(new NewGameResponse(id));
     }
@@ -25,7 +28,8 @@ public class GameController(IMemoryCache cache) : ControllerBase
     [HttpGet("list")]
     public IActionResult ListGames()
     {
-        return Ok(new ListGamesResponse([]));
+        Guid[] activeGuids = [.. _usedGuids.Where(id => _cache.TryGetValue(id, out var _))];
+        return Ok(new ListGamesResponse(activeGuids));
     }
 
     // GET /api/game/{id}
