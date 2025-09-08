@@ -17,8 +17,8 @@ class Program
         {
             switch (Console.ReadKey(true).KeyChar)
             {
-                case 'c': joinCode = await Create(client); break;
-                case 'j': joinCode = await Join(client); break;
+                case 'c': joinCode = await CreateAsync(client); break;
+                case 'j': joinCode = await JoinAsync(client); break;
                 case 'q': return;
                 default: continue;
             }
@@ -27,7 +27,7 @@ class Program
         Console.WriteLine(joinCode);
     }
 
-    internal static async Task<Guid> Join(HttpClient client)
+    internal static async Task<Guid> JoinAsync(HttpClient client)
     {
         Console.WriteLine("Введите код игры: ");
         Guid id;
@@ -40,7 +40,7 @@ class Program
         return id;
     }
 
-    internal static async Task<Guid> Create(HttpClient client)
+    internal static async Task<Guid> CreateAsync(HttpClient client)
     {
         HttpResponseMessage responseMessage = await client.PostAsJsonAsync<NewGameRequest>("game/new", new(0, 0));
         if (responseMessage != null && responseMessage.IsSuccessStatusCode)
