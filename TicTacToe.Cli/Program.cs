@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace TicTacToe.Cli;
 
@@ -28,7 +29,10 @@ class Program
 
     internal static Guid Join(HttpClient client)
     {
-        return Guid.Empty;
+        Console.WriteLine("Введите код игры: ");
+        Guid id;
+        while (!Guid.TryParse(Console.ReadLine(), out id)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
+        return id;
     }
 
     internal static async Task<Guid> Create(HttpClient client)
