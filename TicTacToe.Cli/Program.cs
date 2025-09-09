@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using System.Threading.Tasks;
 using TicTacToe.Core;
 
 namespace TicTacToe.Cli;
@@ -55,13 +54,13 @@ class Program
 
     internal static async Task PlayAsync(Guid joinCode, HttpClient client)
     {
-        GameResponse response = await client.GetFromJsonAsync<GameResponse>($"game/{joinCode}") ?? throw new HttpRequestException("Сервер не вернул состояние игры. Проверьте подключение.");
+        GameResponse response = await client.GetFromJsonAsync<GameResponse>($"game/{joinCode}") ?? throw new HttpRequestException();
 
         int I;
 
-        if (response.Board != "---------")
+        if (response.ConnectedPlayers != Game.EMPTY)
         {
-            I = response.Turn;
+            I = response.ConnectedPlayers ^ Game.XO;
         }
         else
         {
@@ -70,6 +69,7 @@ class Program
             I = I == 'x' ? 1 : 2;
             Console.WriteLine();
         }
+        _ = await client.PostAsJsonAsync<MakeTurnRequest>($"game/{joinCode}", new(-1)); // Сообщить серверу о новом игроке
 
         // Ввывод поля
         PrintGameAndCheckWin(response, joinCode);
@@ -179,9 +179,15 @@ class Program
             do
             {
                 while (!Guid.TryParse(Console.ReadLine(), out guid)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
+                if (await GetGameIsFullAsync(guid, client)) Console.WriteLine("Игра уже началась. Повторите ввод: ");
             } while (!(await GetGamesListAsync(client)).Contains(guid));
             return guid;
         }
+    }
+
+    private static async Task<bool> GetGameIsFullAsync(Guid guid, HttpClient client)
+    {
+        return (await client.GetFromJsonAsync<GameResponse>($"game/{guid}") ?? throw new HttpRequestException()).ConnectedPlayers == Game.XO;
     }
 
     private static async Task<AutocompleteResult> AutocompleteGuidAsync(string input, HttpClient client)
@@ -232,7 +238,7 @@ public record AutocompleteResult(bool Success, Guid Guid, string RemainingInput)
 public record NewGameRequest(uint XLevel, uint OLevel);
 public record NewGameResponse(Guid Id);
 
-public record GameResponse(string Board, int Turn, uint Winner);
+public record GameResponse(string Board, int Turn, uint Winner, int ConnectedPlayers);
 public record MakeTurnRequest(int Cell);
 
 public record ListGamesResponse(Guid[] Ids);
