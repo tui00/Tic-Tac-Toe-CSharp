@@ -29,7 +29,7 @@ class Program
             while (joinCode == null)
             {
                 char input = Console.ReadKey(true).KeyChar;
-                Console.WriteLine("Обработка...");
+                if (input is 'c' or 'j') Console.WriteLine("Обработка...");
                 switch (input)
                 {
                     case 'c': joinCode = await CreateAsync(client); break;
@@ -66,7 +66,7 @@ class Program
         else
         {
             Console.WriteLine("Вы X или O? (введите x или o): ");
-            do { I = Console.ReadKey(false).KeyChar; } while (!(I == 'x' || I == 'o'));
+            do { I = Console.ReadKey(true).KeyChar; } while (!(I == 'x' || I == 'o'));
             I = I == 'x' ? 1 : 2;
             Console.WriteLine();
         }
@@ -74,7 +74,11 @@ class Program
         // Ввывод поля
         PrintGameAndCheckWin(response, joinCode);
         // Информационное сообщение
-        Console.WriteLine($"Ожиданние хода...");
+        Console.WriteLine($"Ожидание хода...");
+
+        // Очистка ввода
+        while (Console.KeyAvailable)
+            _ = Console.ReadKey(true);
 
         while (true)
         {
@@ -111,7 +115,7 @@ class Program
             if (PrintGameAndCheckWin(response, joinCode)) break;
 
             // Информационное сообщение
-            Console.WriteLine($"Ожиданние хода {(I == Game.X ? 'O' : 'X')}...");
+            Console.WriteLine($"Ожидание хода {(I == Game.X ? 'O' : 'X')}...");
         }
         Console.WriteLine($"Результат игры: {(response.Winner == Game.X ? "X победил" : response.Winner == Game.O ? "O победил" : "Ничья")}");
     }
@@ -127,15 +131,70 @@ class Program
 
     internal static async Task<Guid> JoinAsync(HttpClient client)
     {
-        Console.WriteLine("Введите код игры: ");
-        Guid id;
-        ListGamesResponse? response;
+        Console.WriteLine("При использовании автодополнения клавиши редактирования (стрелки, Backspace, Enter и др.) будут недоступны");
+        Console.WriteLine("Использовать автодополнение? (y - да, n - нет)");
+        char autoComplete;
         do
         {
-            response = await client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException();
-            while (!Guid.TryParse(Console.ReadLine(), out id)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
-        } while (!response.Ids.Contains(id));
-        return id;
+            autoComplete = Console.ReadKey(true).KeyChar;
+        }
+        while (!(autoComplete == 'n' || autoComplete == 'y'));
+
+        if (autoComplete == 'y')
+        {
+            Console.WriteLine("Нажмите Backspace для очистки строки");
+            Console.WriteLine("Введите код игры к которой вы хотите присоединиться (36 символов в формате \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\")");
+
+            string input = "";
+            int oldCursorPos = Console.CursorLeft;
+
+            while (true)
+            {
+                AutocompleteResult result = await AutocompleteGuidAsync(input, client);
+                if (result.Success)
+                {
+                    Console.WriteLine(result.RemainingInput);
+                    return result.Guid;
+                }
+
+                char symbol = Console.ReadKey(false).KeyChar;
+
+                if (!char.IsControl(symbol))
+                {
+                    input += symbol;
+                }
+                else if (symbol == '\b')
+                {
+                    Console.CursorLeft = oldCursorPos;
+                    Console.Write(new string(' ', Console.WindowWidth));
+                    Console.CursorLeft = oldCursorPos;
+                    input = "";
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine("Введите код игры к которой вы хотите присоединиться (36 символов в формате \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\")");
+            Guid guid;
+            do
+            {
+                while (!Guid.TryParse(Console.ReadLine(), out guid)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
+            } while (!(await GetGamesListAsync(client)).Contains(guid));
+            return guid;
+        }
+    }
+
+    private static async Task<AutocompleteResult> AutocompleteGuidAsync(string input, HttpClient client)
+    {
+        Guid[] matchingGuids = [.. (await GetGamesListAsync(client)).Where(guid => guid.ToString().StartsWith(input, StringComparison.OrdinalIgnoreCase))];
+        return matchingGuids.Length == 1
+            ? new(true, matchingGuids[0], matchingGuids[0].ToString()[input.Length..])
+            : new(false, Guid.Empty, "");
+    }
+
+    private static async Task<Guid[]> GetGamesListAsync(HttpClient client)
+    {
+        return (await client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException()).Ids;
     }
 
     internal static async Task<Guid> CreateAsync(HttpClient client)
@@ -167,6 +226,8 @@ class Program
         return result;
     }
 }
+
+public record AutocompleteResult(bool Success, Guid Guid, string RemainingInput);
 
 public record NewGameRequest(uint XLevel, uint OLevel);
 public record NewGameResponse(Guid Id);
