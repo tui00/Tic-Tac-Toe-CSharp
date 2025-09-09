@@ -62,6 +62,8 @@ public class GameController(IMemoryCache cache) : ControllerBase
         if (state!.Game.ReadWhoseTurn() == Game.X) state.ConnectedPlayers |= Game.X;
         else state.ConnectedPlayers |= Game.O;
 
+        if (request.Cell == -1) return GetGame(id); // Нет хода
+
         state.Game.MakeTurn(request.Cell);
         if (state.Game.ReadCurrentPlayerLevel() != Game.HUMAN) state.Game.MakeTurn(); // Сходить за бота
 
