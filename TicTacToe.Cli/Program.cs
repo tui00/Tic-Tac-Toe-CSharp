@@ -5,7 +5,7 @@ namespace TicTacToe.Cli;
 
 class Program
 {
-    internal static async Task Main(string[] args)
+    internal static async Task<int> Main(string[] args)
     {
         using HttpClient client = new();
         string[] config = [];
@@ -16,6 +16,7 @@ class Program
         catch (FileNotFoundException)
         {
             Console.WriteLine("Файл конфигурации не найден. Убедитесь, что файл config существует в папке приложения.");
+            return 1;
         }
         client.BaseAddress = new(config[0]);
         client.Timeout = TimeSpan.FromSeconds(10);
@@ -33,7 +34,7 @@ class Program
                 {
                     case 'c': joinCode = await CreateAsync(client); break;
                     case 'j': joinCode = await JoinAsync(client); break;
-                    case 'q': return;
+                    case 'q': return 0;
                     default: continue;
                 }
                 break;
@@ -44,12 +45,9 @@ class Program
         catch (HttpRequestException)
         {
             Console.WriteLine("Не удалось подключиться к серверу. Проверьте интернет-соединение и попробуйте снова.");
-            throw;
+            return 1;
         }
-        catch
-        {
-            throw;
-        }
+        return 0;
     }
 
     internal static async Task PlayAsync(Guid joinCode, HttpClient client)
