@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using TicTacToe.Core;
 
 namespace TicTacToe.Cli;
@@ -47,6 +48,11 @@ class Program
             Console.WriteLine("Не удалось подключиться к серверу. Проверьте интернет-соединение и попробуйте снова.");
             return 1;
         }
+        catch (JsonException)
+        {
+            Console.WriteLine("Сервер вернул не коректнный ответ.");
+            return 1;
+        }
         return 0;
     }
 
@@ -67,23 +73,39 @@ class Program
             I = I == 'x' ? 1 : 2;
             Console.WriteLine();
         }
-        _ = await client.PostAsJsonAsync<MakeTurnRequest>($"game/{joinCode}", new(-1)); // Сообщить серверу о новом игроке
 
-        // Ввывод поля
-        PrintGameAndCheckWin(response, joinCode);
-        // Информационное сообщение
-        Console.WriteLine($"Ожидание хода...");
+        // Сообщить серверу о подключении
+        response = (await (await client.PostAsJsonAsync<ConnectPlayerRequest>($"game/{joinCode}/connect", new(I))).Content.ReadFromJsonAsync<GameResponse>()) ?? throw new HttpRequestException();
 
         // Очистка ввода
         while (Console.KeyAvailable)
             _ = Console.ReadKey(true);
 
+
         while (true)
         {
+            // Проверка победителя
+            if (PrintGameAndCheckWin(response, joinCode)) break;
+
+            string oldMessage = "";
+
             // POLLING
-            while (response.Turn != I)
+            while (response.Turn != I || response.ConnectedPlayers != Game.XO)
             {
                 response = await client.GetFromJsonAsync<GameResponse>($"game/{joinCode}") ?? throw new HttpRequestException("Сервер не вернул состояние игры. Проверьте подключение.");
+
+                // Информационное сообщение        
+                string message = GetInfoMessage(response.ConnectedPlayers, I);
+
+                if (message != oldMessage)
+                {
+                    Console.CursorLeft = 0;
+                    Console.Write(new string(' ', Console.WindowWidth));
+                    Console.CursorLeft = 0;
+                    Console.Write(message);
+                    oldMessage = message;
+                }
+
                 await Task.Delay(1000);
             }
 
@@ -103,20 +125,12 @@ class Program
             } while (isLegal != true);
 
             // Отправка хода
-            HttpResponseMessage responseMessage = await client.PostAsJsonAsync<MakeTurnRequest>($"game/{joinCode}", new(input));
-            GameResponse? tempResponse = await responseMessage.Content.ReadFromJsonAsync<GameResponse>();
-            if (!responseMessage.IsSuccessStatusCode || tempResponse == null)
-                throw new HttpRequestException();
-            response = tempResponse;
-
-            // Проверка победителя
-            if (PrintGameAndCheckWin(response, joinCode)) break;
-
-            // Информационное сообщение
-            Console.WriteLine($"Ожидание хода {(I == Game.X ? 'O' : 'X')}...");
+            response = (await (await client.PostAsJsonAsync<MakeTurnRequest>($"game/{joinCode}", new(input))).Content.ReadFromJsonAsync<GameResponse>()) ?? throw new HttpRequestException();
         }
         Console.WriteLine($"Результат игры: {(response.Winner == Game.X ? "X победил" : response.Winner == Game.O ? "O победил" : "Ничья")}");
     }
+
+    private static string GetInfoMessage(int player, int I) => $"Ожидание {(player != Game.XO ? "подключения" : "хода")} {(I == Game.X ? 'O' : 'X')}...";
 
     private static bool PrintGameAndCheckWin(GameResponse response, Guid joinCode)
     {
@@ -203,7 +217,7 @@ class Program
 
     internal static async Task<Guid> CreateAsync(HttpClient client)
     {
-        HttpResponseMessage responseMessage = await client.PostAsJsonAsync<NewGameRequest>("game/new", new(0, 0));
+        using HttpResponseMessage responseMessage = await client.PostAsJsonAsync<NewGameRequest>("game/new", new(0, 0));
         if (responseMessage != null && responseMessage.IsSuccessStatusCode)
         {
             NewGameResponse? response = await responseMessage.Content.ReadFromJsonAsync<NewGameResponse>();
@@ -242,3 +256,5 @@ public record MakeTurnRequest(int Cell);
 public record ListGamesResponse(Guid[] Ids);
 
 public record IsLegalResponse(bool IsLegal);
+
+public record ConnectPlayerRequest(int Player);
