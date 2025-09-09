@@ -32,14 +32,14 @@
 ### Шаги
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/ваш-ник/tic-tac-toe.git
-cd tic-tac-toe
+git clone https://github.com/tui00/Tic-Tac-Toe-CSharp.git
+cd Tic-Tac-Toe-CSharp
 
 # Собрать проект
-dotnet build
+dotnet build TicTacToe.Cli
 
 # Запустить
-dotnet run
+dotnet run --project TicTacToe.Cli
 ```
 
 ---
