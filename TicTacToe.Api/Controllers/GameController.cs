@@ -68,7 +68,9 @@ public class GameController(IMemoryCache cache) : ControllerBase
         if (!_cache.TryGetValue(id, out GameState? state))
             return NotFound(new { error = "Game not found" });
 
-        if (state!.Game.ReadCurrentPlayerLevel() != Game.HUMAN) state.Game.MakeTurn(); // Сходить за бота
+        if (state!.Game.ReadCurrentPlayerLevel() != Game.HUMAN)
+            if (state!.Game.ReadWinner() == 0)
+                state.Game.MakeTurn(); // Сходить за бота
 
         return Ok(new GameResponse(FormatBoard(state!), state!.Game.ReadWhoseTurn(), state.Game.ReadWinner(), state.ConnectedPlayers));
     }
