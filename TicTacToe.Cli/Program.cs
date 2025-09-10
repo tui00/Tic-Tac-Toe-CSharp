@@ -241,13 +241,8 @@ class Program
             }
             else
             {
-                // Во всех возможных оставшихся случаях:
-                // 1. human vs bot (Оба подключены)
-                // 2. bot vs human (Оба подключены)
-                // 3. bot s bot (Оба подключены)
                 if (I == 0 || Enemy == 0)
                 {
-                    await client.PostAsJsonAsync<ConnectPlayerRequest>($"game/{response.Id}/connect", new(I == 0 ? Game.O : Game.X));
                     player = I == 0 ? Game.X : Game.O;
                 }
                 else
