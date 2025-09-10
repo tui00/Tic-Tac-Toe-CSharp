@@ -22,11 +22,14 @@ class Program
         client.BaseAddress = new(config[0]);
         client.Timeout = TimeSpan.FromSeconds(10);
 
-        Console.WriteLine("Привет! Введите (c)reate что-бы создать игру, (j)oin что-бы присоединиться, (q)uit для выхода: ");
-        Guid? joinCode = null;
-
         try
         {
+            // Тест подключения
+            _ = await client.GetFromJsonAsync<ListGamesResponse>("game/list");
+
+            Console.WriteLine("Привет! Введите (c)reate что-бы создать игру, (j)oin что-бы присоединиться, (q)uit для выхода: ");
+            Guid? joinCode = null;
+
             while (joinCode == null)
             {
                 char input = Console.ReadKey(true).KeyChar;
