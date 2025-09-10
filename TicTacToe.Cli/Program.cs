@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text.Json;
 using TicTacToe.Core;
 
@@ -25,10 +26,11 @@ class Program
         try
         {
             // Тест подключения
-            _ = await client.GetFromJsonAsync<ListGamesResponse>("game/list");
+            _ = GetGamesListAsync(client);
 
             Console.WriteLine("Привет! Введите (c)reate что-бы создать игру, (j)oin что-бы присоединиться, (q)uit для выхода: ");
             Guid? joinCode = null;
+            int? I = null;
 
             while (joinCode == null)
             {
@@ -36,15 +38,15 @@ class Program
                 if (input is 'c' or 'j') Console.WriteLine("Обработка...");
                 switch (input)
                 {
-                    case 'c': joinCode = await CreateAsync(client); break;
-                    case 'j': joinCode = await JoinAsync(client); break;
+                    case 'c': (joinCode, I) = await CreateAsync(client); break;
+                    case 'j': (joinCode, I) = await JoinAsync(client); break;
                     case 'q': return 0;
                     default: continue;
                 }
                 break;
             }
             Console.WriteLine("Начинаем игру...");
-            await PlayAsync((Guid)joinCode, client);
+            await PlayAsync((Guid)joinCode, (int)I!, client);
         }
         catch (HttpRequestException)
         {
@@ -59,26 +61,10 @@ class Program
         return 0;
     }
 
-    internal static async Task PlayAsync(Guid joinCode, HttpClient client)
+    internal static async Task PlayAsync(Guid joinCode, int I, HttpClient client)
     {
-        GameResponse response = await client.GetFromJsonAsync<GameResponse>($"game/{joinCode}") ?? throw new HttpRequestException();
-
-        int I;
-
-        if (response.ConnectedPlayers != Game.EMPTY)
-        {
-            I = response.ConnectedPlayers ^ Game.XO;
-        }
-        else
-        {
-            Console.WriteLine("Вы X или O? (введите x или o): ");
-            do { I = Console.ReadKey(true).KeyChar; } while (!(I == 'x' || I == 'o'));
-            I = I == 'x' ? 1 : 2;
-            Console.WriteLine();
-        }
-
         // Сообщить серверу о подключении
-        response = (await (await client.PostAsJsonAsync<ConnectPlayerRequest>($"game/{joinCode}/connect", new(I))).Content.ReadFromJsonAsync<GameResponse>()) ?? throw new HttpRequestException();
+        GameResponse response = await (await client.PostAsJsonAsync<ConnectPlayerRequest>($"game/{joinCode}/connect", new(I))).Content.ReadFromJsonAsync<GameResponse>() ?? throw new HttpRequestException();
 
         // Очистка ввода
         while (Console.KeyAvailable)
@@ -144,7 +130,7 @@ class Program
     }
 
 
-    internal static async Task<Guid> JoinAsync(HttpClient client)
+    internal static async Task<(Guid guid, int I)> JoinAsync(HttpClient client)
     {
         Console.WriteLine("При использовании автодополнения клавиши редактирования (стрелки, Backspace, Enter и др.) будут недоступны");
         Console.WriteLine("Использовать автодополнение? (y - да, n - нет)");
@@ -168,8 +154,13 @@ class Program
                 AutocompleteResult result = await AutocompleteGuidAsync(input, client);
                 if (result.Success)
                 {
-                    Console.WriteLine(result.RemainingInput);
-                    return result.Guid;
+                    GameResponse response = await client.GetFromJsonAsync<GameResponse>($"game/{result.Guid}") ?? throw new HttpRequestException();
+                    if (response.ConnectedPlayers != Game.XO)
+                    {
+                        Console.WriteLine(result.RemainingInput);
+                        int I = response.ConnectedPlayers ^ Game.XO;
+                        return (result.Guid, I);
+                    }
                 }
 
                 char symbol = Console.ReadKey(false).KeyChar;
@@ -196,7 +187,8 @@ class Program
                 while (!Guid.TryParse(Console.ReadLine(), out guid)) Console.WriteLine("Введён неверный код игры. Повторите ввод: ");
                 if (await GetGameIsFullAsync(guid, client)) Console.WriteLine("Игра уже началась. Повторите ввод: ");
             } while (!(await GetGamesListAsync(client)).Contains(guid));
-            return guid;
+            GameResponse response = await client.GetFromJsonAsync<GameResponse>($"game/{guid}") ?? throw new HttpRequestException();
+            return (guid, response.ConnectedPlayers ^ Game.XO);
         }
     }
 
@@ -218,16 +210,45 @@ class Program
         return (await client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException()).Ids;
     }
 
-    internal static async Task<Guid> CreateAsync(HttpClient client)
+    internal static async Task<(Guid guid, int I)> CreateAsync(HttpClient client)
     {
-        using HttpResponseMessage responseMessage = await client.PostAsJsonAsync<NewGameRequest>("game/new", new(0, 0));
-        if (responseMessage != null && responseMessage.IsSuccessStatusCode)
+        int I, Enemy;
+
+        Console.WriteLine(string.Join('\n', ["Уровни:", .. Game.bots.Select((b, i) => $"{i}. {b.Item1}")]));
+
+        Console.WriteLine("Введите уровень X:");
+        while ((!int.TryParse(Console.ReadLine(), out I)) || (!(I >= 0 && I < Game.bots.Length))) ;
+
+        Console.WriteLine("Введите уровень O:");
+        while (!int.TryParse(Console.ReadLine(), out Enemy) && !(Enemy >= 0 && Enemy < Game.bots.Length)) ;
+
+        using HttpResponseMessage responseMessage = await client.PostAsJsonAsync<NewGameRequest>("game/new", new((uint)I, (uint)Enemy));
+        if (responseMessage.IsSuccessStatusCode)
         {
-            NewGameResponse? response = await responseMessage.Content.ReadFromJsonAsync<NewGameResponse>();
-            if (response != null)
+            NewGameResponse response = await responseMessage.Content.ReadFromJsonAsync<NewGameResponse>() ?? throw new HttpRequestException();
+            int players;
+            if (I == 0 && Enemy == 0)
             {
-                return response.Id;
+                Console.WriteLine("X играет на этом устройстве? Введите (y)es или (n)o:");
+                char input;
+                do
+                {
+                    input = Console.ReadKey(true).KeyChar;
+                }
+                while (!(input == 'y' || input == 'n') || !(Enemy >= 0 && Enemy < Game.bots.Length));
+
+                players = input == 'y' ? Game.X : Game.O;
             }
+            else
+            {
+                // Во всех возможных оставшихся случаях:
+                // 1. human vs bot (Оба подключены)
+                // 2. bot vs human (Оба подключены)
+                // 3. bot s bot (Оба подключены)
+                players = Game.XO;
+            }
+
+            return (response.Id, players != Game.XO ? players : Game.EMPTY);
         }
         throw new HttpRequestException();
     }
