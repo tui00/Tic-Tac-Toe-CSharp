@@ -26,7 +26,7 @@ class Program
         try
         {
             // Тест подключения
-            _ = GetGamesListAsync(client);
+            _ = await GetGamesListAsync(client);
 
             Console.WriteLine("Привет! Введите (c)reate что-бы создать игру, (j)oin что-бы присоединиться, (q)uit для выхода: ");
             Guid? joinCode = null;
@@ -251,7 +251,7 @@ class Program
                 }
             }
 
-            return (response.Id, player != Game.XO ? player : Game.EMPTY);
+            return (response.Id, player);
         }
         throw new HttpRequestException();
     }
