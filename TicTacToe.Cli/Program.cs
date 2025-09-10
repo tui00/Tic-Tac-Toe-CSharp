@@ -226,7 +226,7 @@ class Program
         if (responseMessage.IsSuccessStatusCode)
         {
             NewGameResponse response = await responseMessage.Content.ReadFromJsonAsync<NewGameResponse>() ?? throw new HttpRequestException();
-            int players;
+            int player;
             if (I == 0 && Enemy == 0)
             {
                 Console.WriteLine("X играет на этом устройстве? Введите (y)es или (n)o:");
@@ -237,7 +237,7 @@ class Program
                 }
                 while (!(input == 'y' || input == 'n') || !(Enemy >= 0 && Enemy < Game.bots.Length));
 
-                players = input == 'y' ? Game.X : Game.O;
+                player = input == 'y' ? Game.X : Game.O;
             }
             else
             {
@@ -245,10 +245,18 @@ class Program
                 // 1. human vs bot (Оба подключены)
                 // 2. bot vs human (Оба подключены)
                 // 3. bot s bot (Оба подключены)
-                players = Game.XO;
+                if (I == 0 || Enemy == 0)
+                {
+                    await client.PostAsJsonAsync<ConnectPlayerRequest>($"game/{response.Id}/connect", new(I == 0 ? Game.O : Game.X));
+                    player = I == 0 ? Game.X : Game.O;
+                }
+                else
+                {
+                    player = Game.EMPTY;
+                }
             }
 
-            return (response.Id, players != Game.XO ? players : Game.EMPTY);
+            return (response.Id, player != Game.XO ? player : Game.EMPTY);
         }
         throw new HttpRequestException();
     }
