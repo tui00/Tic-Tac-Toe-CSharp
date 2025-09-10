@@ -151,7 +151,7 @@ public class Cli : IDisposable
             if (PrintGameBoardAndCheckWin(response)) break;
 
             // Отправка хода
-            response = await PostAsync<GameState, MakeTurnRequest>("game/{id}", new(await GetValidInputAsync()));
+            response = await PostAsync<GameState, MakeTurnRequest>($"game/{_gameId}", new(await GetValidInputAsync()));
         }
         Console.WriteLine($"Результат игры: {(response.Winner == Game.X ? "X победил" : response.Winner == Game.O ? "O победил" : "Ничья")}");
     }
