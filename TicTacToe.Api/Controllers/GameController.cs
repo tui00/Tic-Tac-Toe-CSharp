@@ -16,9 +16,28 @@ public class GameController(IMemoryCache cache) : ControllerBase
     [HttpPost("new")]
     public IActionResult CreateGame([FromBody] NewGameRequest newGame)
     {
+        GameState state;
         Game game = new(newGame.XLevel, newGame.OLevel);
         Guid guid = Guid.NewGuid();
-        _cache.Set(guid, new GameState(game, 0), TimeSpan.FromMinutes(30));
+
+        if (newGame.XLevel != 0 && newGame.OLevel != 0)
+        {
+            state = new(game, Game.XO);
+        }
+        else if (newGame.XLevel != 0)
+        {
+            state = new(game, Game.X);
+        }
+        else if (newGame.OLevel != 0)
+        {
+            state = new(game, Game.O);
+        }
+        else
+        {
+            state = new(game, Game.EMPTY);
+        }
+
+        _cache.Set(guid, state, TimeSpan.FromMinutes(30));
         _usedGuids.Add(guid);
 
         return Ok(new NewGameResponse(guid));
@@ -49,6 +68,10 @@ public class GameController(IMemoryCache cache) : ControllerBase
         if (!_cache.TryGetValue(id, out GameState? state))
             return NotFound(new { error = "Game not found" });
 
+        if (state!.Game.ReadCurrentPlayerLevel() != Game.HUMAN)
+            if (state!.Game.ReadWinner() == 0)
+                state.Game.MakeTurn(); // Сходить за бота
+
         return Ok(new GameResponse(FormatBoard(state!), state!.Game.ReadWhoseTurn(), state.Game.ReadWinner(), state.ConnectedPlayers));
     }
 
@@ -63,7 +86,6 @@ public class GameController(IMemoryCache cache) : ControllerBase
         else state.ConnectedPlayers |= Game.O;
 
         state.Game.MakeTurn(request.Cell);
-        if (state.Game.ReadCurrentPlayerLevel() != Game.HUMAN) state.Game.MakeTurn(); // Сходить за бота
 
         _cache.Set(id, state, TimeSpan.FromMinutes(30));
 
@@ -72,7 +94,7 @@ public class GameController(IMemoryCache cache) : ControllerBase
 
     // POST /api/game/{id}/connect
     [HttpPost("{id}/connect")]
-    public IActionResult ConnectPlayer(Guid id, [FromBody]ConnectPlayerRequest request)
+    public IActionResult ConnectPlayer(Guid id, [FromBody] ConnectPlayerRequest request)
     {
         if (!_cache.TryGetValue(id, out GameState? state))
             return NotFound(new { error = "Game not found" });
