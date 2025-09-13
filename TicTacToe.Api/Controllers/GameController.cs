@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using TicTacToe.Core;
+using TicTacToe.Api.Dto;
 
 namespace TicTacToe.Api.Controllers;
 
@@ -117,21 +118,3 @@ public class GameController(IMemoryCache cache) : ControllerBase
         return board;
     }
 }
-
-
-public record GameState(Game Game, int ConnectedPlayers)
-{
-    public int ConnectedPlayers = ConnectedPlayers;
-}
-
-public record NewGameRequest(uint XLevel, uint OLevel);
-public record NewGameResponse(Guid Id);
-
-public record GameResponse(string Board, int Turn, uint Winner, int ConnectedPlayers);
-public record MakeTurnRequest(int Cell);
-
-public record ListGamesResponse(Guid[] Ids);
-
-public record IsLegalResponse(bool IsLegal);
-
-public record ConnectPlayerRequest(int Player);
