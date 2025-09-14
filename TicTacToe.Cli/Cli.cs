@@ -29,6 +29,10 @@ public class Cli : IDisposable
 
     ~Cli() => Dispose();
 
+    // ========================================================================
+    // 🟩 ОСНОВНОЙ МЕТОД ЗАПУСКА
+    // ========================================================================
+
     public async Task<int> Start()
     {
         if (!TryConfigurate()) return 1;
@@ -59,45 +63,15 @@ public class Cli : IDisposable
         }
         catch (JsonException)
         {
-            Console.WriteLine("Сервер вернул не коректнный ответ.");
+            Console.WriteLine("Сервер вернул некорректный ответ.");
             return 1;
         }
         return 0;
     }
 
-    private static Action GetUserAction()
-    {
-        Console.WriteLine("Привет! Введите:");
-        Console.WriteLine("  (c)reate — создать игру");
-        Console.WriteLine("  (j)oin  — присоединиться к игре");
-        Console.WriteLine("  (q)uit  — выйти");
-        while (true)
-        {
-            char input = Console.ReadKey(true).KeyChar;
-            if (input is 'c' or 'j') Console.WriteLine("Обработка...");
-            switch (input)
-            {
-                case 'c': return Action.CreateGame;
-                case 'j': return Action.JoinToGame;
-                case 'q': return Action.Quit;
-                default: continue;
-            }
-        }
-    }
-
-    private async Task<bool> TryTestConnectionAsync()
-    {
-        // Тест подключения
-        try
-        {
-            _ = await GetGamesListAsync();
-        }
-        catch (HttpRequestException)
-        {
-            return false;
-        }
-        return true;
-    }
+    // ========================================================================
+    // 🟦 ИНИЦИАЛИЗАЦИЯ И КОНФИГУРАЦИЯ
+    // ========================================================================
 
     private bool TryConfigurate()
     {
@@ -116,28 +90,96 @@ public class Cli : IDisposable
         return true;
     }
 
+    private async Task<bool> TryTestConnectionAsync()
+    {
+        try
+        {
+            _ = await GetGamesListAsync();
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    // ========================================================================
+    // 🟨 ВВОД ПОЛЬЗОВАТЕЛЯ И ВЫБОР ДЕЙСТВИЯ
+    // ========================================================================
+
+    private static Action GetUserAction()
+    {
+        Console.WriteLine("Привет Введите:");
+        Console.WriteLine("  (c)reate — создать игру");
+        Console.WriteLine("  (j)oin  — присоединиться к игре");
+        Console.WriteLine("  (q)uit  — выйти");
+        while (true)
+        {
+            char input = Console.ReadKey(true).KeyChar;
+            if (input is not ('c' or 'j' or 'q')) continue;
+            Console.WriteLine("Обработка...");
+            return input switch
+            {
+                'c' => Action.CreateGame,
+                'j' => Action.JoinToGame,
+                _ => Action.Quit
+            }
+        ;
+    }
+    }
+
+    private async Task<int> GetValidInputAsync()
+    {
+        Console.WriteLine("Куда вы хотите сходить? Поле для игры — это NumPad. Введите номер клетки:");
+        int input;
+        do
+        {
+            input = Console.ReadKey(true).KeyChar - '1';
+            input += (input < 3) ? 6 : ((input > 5) ? -6 : 0);
+        } while ((await _client.GetFromJsonAsync<IsLegalResponse>($"game/{_gameId}/isLegal/{input}"))?.IsLegal != true);
+        return input;
+    }
+
+    // ========================================================================
+    // 🟪 СЕТЕВЫЕ ЗАПРОСЫ
+    // ========================================================================
+
+    private async Task<TOut> PostAsync<TOut, TBody>(string url, TBody body)
+    {
+        return await (await _client.PostAsJsonAsync(url, body)).Content.ReadFromJsonAsync<TOut>() ?? throw new HttpRequestException();
+    }
+
+    private async Task<Guid[]> GetGamesListAsync()
+    {
+        return (await _client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException()).Ids;
+    }
+
+    private async Task<string[]> GetBotsListAsync()
+    {
+        return (await _client.GetFromJsonAsync<GetBotsResponse>("game/bots") ?? throw new HttpRequestException()).Names;
+    }
+
+    // ========================================================================
+    // 🟫 УПРАВЛЕНИЕ ИГРОЙ: СОЗДАНИЕ, ПРИСОЕДИНЕНИЕ, ИГРОВОЙ ЦИКЛ
+    // ========================================================================
+
     public async Task PlayAsync()
     {
-        // Сообщить серверу о подключении
         GameResponse response = await PostAsync<GameResponse, ConnectPlayerRequest>($"game/{_gameId}/connect", new(_player));
 
         while (true)
         {
-            // Очистка ввода
             while (Console.KeyAvailable)
                 _ = Console.ReadKey(true);
 
-            // Проверка победителя
             if (PrintGameBoardAndCheckWin(response)) break;
 
             string oldMessage = "";
 
-            // POLLING
             while (response.Turn != _player || response.ConnectedPlayers != XO)
             {
                 response = await _client.GetFromJsonAsync<GameResponse>($"game/{_gameId}") ?? throw new HttpRequestException();
 
-                // Информационное сообщение        
                 string message = $"Ожидание {(response.ConnectedPlayers != XO ? "подключения" : "хода")} {(_player == X ? 'O' : 'X')}...";
 
                 if (message != oldMessage)
@@ -152,54 +194,16 @@ public class Cli : IDisposable
                 await Task.Delay(1000);
             }
 
-            // Проверка победителя
             if (PrintGameBoardAndCheckWin(response)) break;
 
-            // Отправка хода
             response = await PostAsync<GameResponse, MakeTurnRequest>($"game/{_gameId}", new(await GetValidInputAsync()));
         }
         Console.WriteLine($"Результат игры: {(response.Winner == X ? "X победил" : response.Winner == O ? "O победил" : "Ничья")}");
     }
 
-    private async Task<int> GetValidInputAsync()
-    {
-        // Ввод клетки
-        Console.WriteLine("Куда вы хотите сходить? Поле для игры это NumPad. Введите номер клетки:");
-        int input;
-        do
-        {
-            input = Console.ReadKey(true).KeyChar - '1';
-            input += (input < 3) ? 6 : ((input > 5) ? -6 : 0);
-        } while ((await _client.GetFromJsonAsync<IsLegalResponse>($"game/{_gameId}/isLegal/{input}"))?.IsLegal != true);
-        return input;
-    }
-
-    private async Task<TOut> PostAsync<TOut, TBody>(string url, TBody body)
-    {
-        return await (await _client.PostAsJsonAsync(url, body)).Content.ReadFromJsonAsync<TOut>() ?? throw new HttpRequestException();
-    }
-
-    private bool PrintGameBoardAndCheckWin(GameResponse Game)
-    {
-        Console.Clear();
-        string result = "";
-        for (int y = 0; y < 9; y += 3)
-        {
-            char x1 = Game.Board[y + 0] == '-' ? ' ' : char.ToUpper(Game.Board[y + 0]);
-            char x2 = Game.Board[y + 1] == '-' ? ' ' : char.ToUpper(Game.Board[y + 1]);
-            char x3 = Game.Board[y + 2] == '-' ? ' ' : char.ToUpper(Game.Board[y + 2]);
-            result += $"{x1} │ {x2} │ {x3}";
-
-            if (y != 6) result += $"\n──┼───┼──\n";
-        }
-        Console.WriteLine(result);
-        Console.WriteLine($"Код игры: {_gameId}");
-        return Game.Winner != 0;
-    }
-
     public async Task JoinToGameAsync()
     {
-        Console.WriteLine("Какой код у игры к которой вы хотите присоединиться? Нажмите Escape что-бы выйти. Введите код:");
+        Console.WriteLine("Какой код у игры, к которой вы хотите присоединиться? Нажмите Escape, чтобы выйти. Введите код:");
 
         string input = "";
 
@@ -228,7 +232,6 @@ public class Cli : IDisposable
                 {
                     < 36 when len is not (14 or 19 or 8 or 13 or 18 or 23) => char.IsAsciiHexDigit(symbol),
                     14 => symbol == '4',
-                    19 => char.IsDigit(symbol),
                     8 or 13 or 18 or 23 => symbol == '-',
                     _ => false
                 };
@@ -243,7 +246,7 @@ public class Cli : IDisposable
                 Console.CursorLeft--;
                 Console.Write(' ');
                 Console.CursorLeft--;
-                input = input[..Console.CursorLeft];
+                input = input[..^1];
             }
             else if (symbol == '\x1b')
             {
@@ -253,31 +256,22 @@ public class Cli : IDisposable
         }
     }
 
-    private async Task<Guid[]> GetGamesListAsync()
-    {
-        return (await _client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException()).Ids;
-    }
-    private async Task<string[]> GetBotsListAsync()
-    {
-        return (await _client.GetFromJsonAsync<GetBotsResponse>("game/bots") ?? throw new HttpRequestException()).Names;
-    }
-
     public async Task CreateGameAsync()
     {
-        int I, Enemy;
-
         string[] bots = await GetBotsListAsync();
 
         Console.WriteLine(string.Join('\n', ["Уровни:", .. bots.Select((b, i) => $"{i}. {b}")]));
 
         Console.WriteLine("Введите уровень для X:");
-        while ((!int.TryParse(Console.ReadLine(), out I)) || (!(I >= 0 && I < bots.Length))) ;
+        int I;
+        while (!int.TryParse(Console.ReadLine(), out I) || I < 0 || I >= bots.Length) { }
 
         Console.WriteLine("Введите уровень для O:");
-        while (!int.TryParse(Console.ReadLine(), out Enemy) && !(Enemy >= 0 && Enemy < bots.Length)) ;
+        int Enemy;
+        while (!int.TryParse(Console.ReadLine(), out Enemy) || Enemy < 0 || Enemy >= bots.Length) { }
 
         NewGameResponse response = await PostAsync<NewGameResponse, NewGameRequest>("game/new", new((uint)I, (uint)Enemy));
-        int player;
+
         if (I == 0 && Enemy == 0)
         {
             Console.WriteLine("X играет на этом устройстве? Введите (y)es или (n)o:");
@@ -285,26 +279,42 @@ public class Cli : IDisposable
             do
             {
                 input = Console.ReadKey(true).KeyChar;
-            }
-            while (!(input == 'y' || input == 'n') || !(Enemy >= 0 && Enemy < bots.Length));
-
-            player = input == 'y' ? X : O;
+            } while (input != 'y' && input != 'n');
+            _player = input == 'y' ? X : O;
         }
         else
         {
-            if (I == 0 || Enemy == 0)
-            {
-                player = I == 0 ? X : O;
-            }
-            else
-            {
-                player = EMPTY;
-            }
+            _player = I == 0 ? X : Enemy == 0 ? O : EMPTY;
         }
 
-        this._player = player;
         _gameId = response.Id;
     }
+
+    // ========================================================================
+    // 🟥 ОТОБРАЖЕНИЕ ИГРОВОГО ПОЛЯ
+    // ========================================================================
+
+    private bool PrintGameBoardAndCheckWin(GameResponse game)
+    {
+        Console.Clear();
+        string result = "";
+        for (int y = 0; y < 9; y += 3)
+        {
+            char x1 = game.Board[y + 0] == '-' ? ' ' : char.ToUpper(game.Board[y + 0]);
+            char x2 = game.Board[y + 1] == '-' ? ' ' : char.ToUpper(game.Board[y + 1]);
+            char x3 = game.Board[y + 2] == '-' ? ' ' : char.ToUpper(game.Board[y + 2]);
+            result += $"{x1} │ {x2} │ {x3}";
+
+            if (y != 6) result += $"\n──┼───┼──\n";
+        }
+        Console.WriteLine(result);
+        Console.WriteLine($"Код игры: {_gameId}");
+        return game.Winner != 0;
+    }
+
+    // ========================================================================
+    // 🟨 ОСВОБОЖДЕНИЕ РЕСУРСОВ
+    // ========================================================================
 
     public void Dispose()
     {
