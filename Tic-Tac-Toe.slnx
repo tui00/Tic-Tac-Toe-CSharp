@@ -2,4 +2,5 @@
   <Project Path="TicTacToe.Api/TicTacToe.Api.csproj" />
   <Project Path="TicTacToe.Cli/TicTacToe.Cli.csproj" />
   <Project Path="TicTacToe.Core/TicTacToe.Core.csproj" />
+  <Project Path="TicTacToe.Dto/TicTacToe.Dto.csproj" />
 </Solution>

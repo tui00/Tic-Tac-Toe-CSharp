@@ -1,6 +1,6 @@
 using TicTacToe.Core;
 
-namespace TicTacToe.Api.Dto;
+namespace TicTacToe.Api;
 
 internal record GameState(Game Game, int ConnectedPlayers)
 {

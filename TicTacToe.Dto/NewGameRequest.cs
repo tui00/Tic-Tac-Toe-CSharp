@@ -1,3 +1,3 @@
-namespace TicTacToe.Api.Dto;
+namespace TicTacToe.Dto;
 
 public record NewGameRequest(uint XLevel, uint OLevel);

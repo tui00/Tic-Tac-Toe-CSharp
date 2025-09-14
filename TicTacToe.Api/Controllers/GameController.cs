@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using TicTacToe.Core;
-using TicTacToe.Api.Dto;
+using TicTacToe.Dto;
 
 namespace TicTacToe.Api.Controllers;
 

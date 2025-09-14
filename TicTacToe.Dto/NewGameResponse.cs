@@ -1,3 +1,3 @@
-namespace TicTacToe.Api.Dto;
+namespace TicTacToe.Dto;
 
 public record NewGameResponse(Guid Id);
