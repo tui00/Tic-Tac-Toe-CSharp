@@ -62,6 +62,13 @@ public class GameController(IMemoryCache cache) : ControllerBase
         return Ok(new IsLegalResponse(state!.Game.IsLegalMove(cell)));
     }
 
+    // GET /api/game/bots
+    [HttpGet("bots")]
+    public IActionResult GetBots()
+    {
+        return Ok(new GetBotsResponse([.. Game.bots.Select(bot => bot.Item1)]));
+    }
+
     // GET /api/game/{id}
     [HttpGet("{id}")]
     public IActionResult GetGame(Guid id)
