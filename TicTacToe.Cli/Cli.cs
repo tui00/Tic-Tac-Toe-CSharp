@@ -123,9 +123,8 @@ public class Cli : IDisposable
                 'c' => Action.CreateGame,
                 'j' => Action.JoinToGame,
                 _ => Action.Quit
-            }
-        ;
-    }
+            };
+        }
     }
 
     private async Task<int> GetValidInputAsync()
@@ -136,27 +135,58 @@ public class Cli : IDisposable
         {
             input = Console.ReadKey(true).KeyChar - '1';
             input += (input < 3) ? 6 : ((input > 5) ? -6 : 0);
-        } while ((await _client.GetFromJsonAsync<IsLegalResponse>($"game/{_gameId}/isLegal/{input}"))?.IsLegal != true);
+        } while (!await IsMoveLegalAsync(input));
         return input;
     }
 
     // ========================================================================
-    // 🟪 СЕТЕВЫЕ ЗАПРОСЫ
+    // 🟪 СЕТЕВЫЕ ЗАПРОСЫ (все вынесены в микро-методы)
     // ========================================================================
-
-    private async Task<TOut> PostAsync<TOut, TBody>(string url, TBody body)
-    {
-        return await (await _client.PostAsJsonAsync(url, body)).Content.ReadFromJsonAsync<TOut>() ?? throw new HttpRequestException();
-    }
 
     private async Task<Guid[]> GetGamesListAsync()
     {
-        return (await _client.GetFromJsonAsync<ListGamesResponse>("game/list") ?? throw new HttpRequestException()).Ids;
+        return (await _client.GetFromJsonAsync<ListGamesResponse>("game/list")
+               ?? throw new HttpRequestException("Сервер не вернул список игр.")).Ids;
     }
 
     private async Task<string[]> GetBotsListAsync()
     {
-        return (await _client.GetFromJsonAsync<GetBotsResponse>("game/bots") ?? throw new HttpRequestException()).Names;
+        return (await _client.GetFromJsonAsync<GetBotsResponse>("game/bots")
+               ?? throw new HttpRequestException("Сервер не вернул список ботов.")).Names;
+    }
+
+    private async Task<bool> IsMoveLegalAsync(int cell)
+    {
+        var response = await _client.GetFromJsonAsync<IsLegalResponse>($"game/{_gameId}/isLegal/{cell}");
+        return response?.IsLegal == true;
+    }
+
+    private async Task<GameResponse> GetGameAsync()
+    {
+        return await _client.GetFromJsonAsync<GameResponse>($"game/{_gameId}")
+               ?? throw new HttpRequestException("Не удалось получить состояние игры.");
+    }
+
+    private async Task<NewGameResponse> CreateNewGameAsync(uint xBotLevel, uint oBotLevel)
+    {
+        return await PostAsync<NewGameResponse, NewGameRequest>("game/new", new(xBotLevel, oBotLevel));
+    }
+
+    private async Task<GameResponse> ConnectToGameAsync()
+    {
+        return await PostAsync<GameResponse, ConnectPlayerRequest>($"game/{_gameId}/connect", new(_player));
+    }
+
+    private async Task<GameResponse> MakeTurnAsync(int cell)
+    {
+        return await PostAsync<GameResponse, MakeTurnRequest>($"game/{_gameId}", new(cell));
+    }
+
+    private async Task<TOut> PostAsync<TOut, TBody>(string url, TBody body)
+    {
+        var response = await _client.PostAsJsonAsync(url, body);
+        return await response.Content.ReadFromJsonAsync<TOut>()
+               ?? throw new HttpRequestException($"Ошибка при десериализации ответа на POST {url}");
     }
 
     // ========================================================================
@@ -165,7 +195,7 @@ public class Cli : IDisposable
 
     public async Task PlayAsync()
     {
-        GameResponse response = await PostAsync<GameResponse, ConnectPlayerRequest>($"game/{_gameId}/connect", new(_player));
+        GameResponse response = await ConnectToGameAsync();
 
         while (true)
         {
@@ -178,7 +208,7 @@ public class Cli : IDisposable
 
             while (response.Turn != _player || response.ConnectedPlayers != XO)
             {
-                response = await _client.GetFromJsonAsync<GameResponse>($"game/{_gameId}") ?? throw new HttpRequestException();
+                response = await GetGameAsync();
 
                 string message = $"Ожидание {(response.ConnectedPlayers != XO ? "подключения" : "хода")} {(_player == X ? 'O' : 'X')}...";
 
@@ -196,7 +226,7 @@ public class Cli : IDisposable
 
             if (PrintGameBoardAndCheckWin(response)) break;
 
-            response = await PostAsync<GameResponse, MakeTurnRequest>($"game/{_gameId}", new(await GetValidInputAsync()));
+            response = await MakeTurnAsync(await GetValidInputAsync());
         }
         Console.WriteLine($"Результат игры: {(response.Winner == X ? "X победил" : response.Winner == O ? "O победил" : "Ничья")}");
     }
@@ -214,7 +244,7 @@ public class Cli : IDisposable
 
             if (matchingGuids.Length == 1)
             {
-                GameResponse response = await _client.GetFromJsonAsync<GameResponse>($"game/{matchingGuids[0]}") ?? throw new HttpRequestException();
+                GameResponse response = await GetGameAsync();
                 if (response.ConnectedPlayers != XO)
                 {
                     Console.WriteLine(matchingGuids[0].ToString()[input.Length..]);
@@ -270,7 +300,7 @@ public class Cli : IDisposable
         int Enemy;
         while (!int.TryParse(Console.ReadLine(), out Enemy) || Enemy < 0 || Enemy >= bots.Length) { }
 
-        NewGameResponse response = await PostAsync<NewGameResponse, NewGameRequest>("game/new", new((uint)I, (uint)Enemy));
+        NewGameResponse response = await CreateNewGameAsync((uint)I, (uint)Enemy);
 
         if (I == 0 && Enemy == 0)
         {
